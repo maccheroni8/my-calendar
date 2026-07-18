@@ -18,8 +18,12 @@ body{font-family:'Helvetica Neue',Arial,'Hiragino Sans',sans-serif;background:#f
 h1{font-size:15px;font-weight:700;margin-bottom:10px;line-height:1.5;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 
-/* sync bar - hidden by default, shown only on mobile */
-.sync-bar{display:none;background:#e8f4fd;border:1px solid #bdd7f5;border-radius:8px;padding:6px 12px;margin-bottom:10px;font-size:11px;color:#1a6fa8;align-items:center;justify-content:space-between;gap:8px}
+/* sync bar - 全デバイスで非表示 */
+.sync-bar{display:none!important}
+
+/* カレンダースクロールラッパー：PCでは無効 */
+.cal-scroll-wrap{display:contents}
+.cal-scroll-inner{display:contents}
 .sync-status{font-size:11px;font-weight:700}
 .sync-status.ok{color:#22c55e}.sync-status.err{color:#e03}.sync-status.loading{color:#888}
 
@@ -197,10 +201,10 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
   .toolbar-right{justify-content:space-between}
   .view-btn{padding:5px 10px;font-size:11px}
 
-  /* カレンダー横スクロール */
-  .cal-scroll-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -8px;padding:0 8px}
+  /* カレンダー横スクロール（スマホのみ有効化） */
+  .cal-scroll-wrap{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -8px;padding:0 8px}
   .cal-scroll-wrap::-webkit-scrollbar{display:none}
-  .cal-scroll-inner{min-width:490px}
+  .cal-scroll-inner{display:block;min-width:490px}
   .cal-scroll-inner .cal-grid{grid-template-columns:repeat(7,64px);gap:2px}
   .cal-scroll-inner .day-cell{min-height:90px;padding:3px 2px}
   .cal-scroll-inner .dow{font-size:10px;padding:5px 0}

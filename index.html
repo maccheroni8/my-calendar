@@ -611,13 +611,24 @@ let saveTimer=null;
 let addSport='basket', addMarkVal=null;
 const isMobile=()=>window.innerWidth<=600;
 
+// ── 初期化：Firebaseより先にカレンダーを即描画 ──
+{
+  const t2=new Date();curY=t2.getFullYear();curM=t2.getMonth()+1;
+  if(curY<2026||(curY===2026&&curM<8)){curY=2026;curM=8;}
+  if(curY>2027||(curY===2027&&curM>6)){curY=2027;curM=6;}
+}
+// renderCal()はすべての関数定義後に呼ぶ（スクリプト末尾参照）
+
 // ── Firebase ──
-function setSyncStatus(msg,cls){const el=document.getElementById('sync-status');el.textContent=msg;el.className='sync-status '+cls;}
+function setSyncStatus(msg,cls){const el=document.getElementById('sync-status');if(el){el.textContent=msg;el.className='sync-status '+cls;}}
 onSnapshot(DOC_REF,(snap)=>{
   if(snap.exists()){const d=snap.data();marks=d.marks||{};memos=d.memos||{};customGames=d.customGames||[];}
   setSyncStatus('同期済み ✓','ok');
   renderCurrent();
-},(err)=>setSyncStatus('接続エラー ⚠','err'));
+},(err)=>{
+  setSyncStatus('接続エラー ⚠','err');
+  renderCurrent(); // エラー時もカレンダーは表示する
+});
 async function saveToFirebase(){
   try{setSyncStatus('保存中...','loading');await setDoc(DOC_REF,{marks,memos,customGames,updatedAt:new Date().toISOString()});setSyncStatus('保存しました ✓','ok');}
   catch(e){setSyncStatus('保存失敗 ⚠','err');}
@@ -733,7 +744,7 @@ function makeCell(y,m,d,other){
     tag.appendChild(lbl);
     if(ev.mv){const b=document.createElement('span');b.className='badge '+bdgCls(ev.mv);b.textContent=badgeLbl(ev.mv);tag.appendChild(b);}
     if(getMemo(ev.team,ds,ev.idx)){const m2=document.createElement('span');m2.className='badge';m2.style.cssText='background:#f0e6ff;color:#7c3aed';m2.textContent='📝';tag.appendChild(m2);}
-    const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?`vs ${ev.op}`:(ev.cup||ev.op);
+    const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?ev.op:(ev.cup||ev.op);
     tag.addEventListener('click',e=>{e.stopPropagation();openPopup(e,ev.team,ds,ev.idx,clickOp,ev.venue||'',ev.isCustom,ev.sport);});
     cell.appendChild(tag);
   });
@@ -784,7 +795,7 @@ function renderList(){
       const memoHtml=memo?`<div class="l-memo">📝 ${memo.slice(0,60)}${memo.length>60?'…':''}</div>`:'';
       const customTag=isCustom?`<span class="l-custom-tag">追加</span>`:'';
       const row=document.createElement('div');row.className='list-row';
-      const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?`vs ${ev.op}`:(ev.cup||ev.op);
+      const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?ev.op:(ev.cup||ev.op);
       const venueStr=ev.venue||'';
       if(layout==='hori'){
         row.innerHTML=`<span class="l-date" style="color:${wC};display:block;margin-bottom:4px">${dateStr}</span><div style="margin-bottom:4px"><span class="${badgeCl}">${badgeTx}</span>${customTag}</div><div style="font-size:12px;font-weight:500;margin-bottom:2px">${opTx}</div><div style="font-size:10px;color:#bbb;margin-bottom:4px">${venueStr}</div>${markHtml}${memoHtml}`;
@@ -929,11 +940,11 @@ window.submitAddGame=function(){
 document.getElementById('prev').onclick=()=>{curM--;if(curM<1){curM=12;curY--;}renderCal();};
 document.getElementById('next').onclick=()=>{curM++;if(curM>12){curM=1;curY++;}renderCal();};
 
-// ── 初期化 ──
+// ── 初期化：Firebaseの応答を待たずに即カレンダーを表示 ──
 const t2=new Date();curY=t2.getFullYear();curM=t2.getMonth()+1;
 if(curY<2026||(curY===2026&&curM<8)){curY=2026;curM=8;}
 if(curY>2027||(curY===2027&&curM>6)){curY=2027;curM=6;}
-renderCal();
+renderCal(); // Firebase接続前に即描画
 </script>
 </body>
 </html>

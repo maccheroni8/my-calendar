@@ -59,13 +59,14 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .layout-btn.active{background:#555;color:#fff}
 
 /* ── カレンダー ── */
-.nav{display:flex;align-items:center;gap:10px;margin-bottom:10px;justify-content:center}
+.nav{display:flex;align-items:center;gap:10px;margin-bottom:8px;justify-content:center}
 .nav button{background:#fff;border:1px solid #ccc;border-radius:8px;padding:7px 16px;cursor:pointer;font-size:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .month-label{font-size:16px;font-weight:700;min-width:100px;text-align:center}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+/* PC: ツールバー等を除いた残りの高さを6行で均等割 */
 .dow{font-size:10px;font-weight:600;text-align:center;padding:5px 1px;color:#888}
 .dow.sat{color:#002B5C}.dow.sun{color:#E83D7A}
-.day-cell{min-height:70px;border-radius:6px;border:1px solid #e5e5e5;padding:4px;background:#fff}
+.day-cell{height:calc((100vh - 140px) / 6);min-height:80px;border-radius:6px;border:1px solid #e5e5e5;padding:4px;background:#fff;overflow:hidden}
 .day-cell.other-month{opacity:.3;background:#f5f5f5}
 .day-cell.today{border-color:#E83D7A;border-width:2px}
 .day-cell.marked-go{border:3px solid #22c55e;box-shadow:0 0 0 1px #22c55e33}
@@ -714,7 +715,12 @@ function evLabelMobile(ev){
   const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.isCustom;
   if(isJP) return (ev.sport==='⚽ サッカー'?'⚽':'🏀')+' 日本代表';
   if(isCup) return '⚽'+cupAbbr(ev.cup)+' '+abbr(ev.op);
-  if(isCustom) return (ev.sport==='basket'?'🏀':'⚽')+' '+abbr(ev.op);
+  // カスタム試合：「チームA vs チームB」を分割して略称変換
+  if(isCustom){
+    const icon=ev.sport==='basket'?'🏀':'⚽';
+    const abbrOp=ev.op.split(' vs ').map(n=>abbr(n.trim())).join(' vs ');
+    return icon+' '+abbrOp;
+  }
   const icon=ev.team==='brex'?'🏀':'⚽';
   return icon+' '+abbr(ev.op);
 }

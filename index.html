@@ -13,8 +13,8 @@
 <meta name="apple-mobile-web-app-title" content="観戦カレンダー">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'Helvetica Neue',Arial,'Hiragino Sans',sans-serif;background:#f0f2f5;color:#222;min-height:100vh;padding:12px}
-.wrap{max-width:1200px;margin:0 auto}
+body{font-family:'Helvetica Neue',Arial,'Hiragino Sans',sans-serif;background:#fff;color:#222;min-height:100vh;padding:12px 16px}
+.wrap{max-width:100%;margin:0 auto}
 h1{font-size:15px;font-weight:700;margin-bottom:10px;line-height:1.5;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 
@@ -750,7 +750,8 @@ function makeCell(y,m,d,other){
     lbl.textContent=isMobile()?evLabelMobile(ev):evLabelPC(ev);
     tag.appendChild(lbl);
     if(ev.mv){const b=document.createElement('span');b.className='badge '+bdgCls(ev.mv);b.textContent=badgeLbl(ev.mv);tag.appendChild(b);}
-    if(getMemo(ev.team,ds,ev.idx)){const m2=document.createElement('span');m2.className='badge';m2.style.cssText='background:#f0e6ff;color:#7c3aed';m2.textContent='📝';tag.appendChild(m2);}
+    // 📝バッジはPCのみ表示
+    if(!isMobile()&&getMemo(ev.team,ds,ev.idx)){const m2=document.createElement('span');m2.className='badge';m2.style.cssText='background:#f0e6ff;color:#7c3aed';m2.textContent='📝';tag.appendChild(m2);}
     const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?ev.op:(ev.cup||ev.op);
     tag.addEventListener('click',e=>{e.stopPropagation();openPopup(e,ev.team,ds,ev.idx,clickOp,ev.venue||'',ev.isCustom,ev.sport);});
     cell.appendChild(tag);
@@ -793,21 +794,27 @@ function renderList(){
       const dateStr=`${ev.d.slice(5).replace('-','/')}（${dow2}）`;
       const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.isCustom,isTbd=ev.h===null||ev.h===undefined;
       let badgeCl,badgeTx,opTx;
-      if(isCustom){badgeCl='l-badge '+(ev.sport==='basket'?'lb-custom-b':'lb-custom-s');badgeTx=(ev.sport==='basket'?'🏀':'⚽')+' 追加';opTx='vs '+ev.op;}
+      const mob=isMobile();
+      if(isCustom){
+        badgeCl='l-badge '+(ev.sport==='basket'?'lb-custom-b':'lb-custom-s');
+        badgeTx=(ev.sport==='basket'?'🏀':'⚽')+' 追加';
+        // スマホはabbr略称、PCはそのまま
+        const opName=mob?ev.op.split(' vs ').map(n=>abbr(n)).join(' vs '):ev.op;
+        opTx=opName;
+      }
       else if(isJP){badgeCl='l-badge lb-japan';badgeTx=`🇯🇵 ${ev.sport}`;opTx=`${ev.competition} vs ${ev.op}`;}
       else if(isCup){badgeCl='l-badge lb-cup';badgeTx='🏆 '+ev.cup;opTx=ev.op;}
       else{const isB=ev.team==='brex';badgeCl='l-badge '+(isB?(ev.h?'lb-brex':'lb-brex-a'):(ev.h?'lb-cerezo':'lb-cerezo-a'));badgeTx=(isB?'🏀 ブレックス':'⚽ セレッソ')+(isTbd?'':(ev.h?' HOME':' AWAY'));opTx='vs '+ev.op;}
       const markHtml=ev.mv?`<span class="l-mark lm-${ev.mv}">${ev.mv==='go'?'✅ 行く':ev.mv==='maybe'?'△ できたら':'¥ 値段次第'}</span>`:`<span class="l-mark lm-none">未定</span>`;
       const memo=getMemo(ev.team,ev.d,ev.idx);
       const memoHtml=memo?`<div class="l-memo">📝 ${memo.slice(0,60)}${memo.length>60?'…':''}</div>`:'';
-      const customTag=isCustom?`<span class="l-custom-tag">追加</span>`:'';
       const row=document.createElement('div');row.className='list-row';
       const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?ev.op:(ev.cup||ev.op);
       const venueStr=ev.venue||'';
       if(layout==='hori'){
-        row.innerHTML=`<span class="l-date" style="color:${wC};display:block;margin-bottom:4px">${dateStr}</span><div style="margin-bottom:4px"><span class="${badgeCl}">${badgeTx}</span>${customTag}</div><div style="font-size:12px;font-weight:500;margin-bottom:2px">${opTx}</div><div style="font-size:10px;color:#bbb;margin-bottom:4px">${venueStr}</div>${markHtml}${memoHtml}`;
+        row.innerHTML=`<span class="l-date" style="color:${wC};display:block;margin-bottom:4px">${dateStr}</span><div style="margin-bottom:4px"><span class="${badgeCl}">${badgeTx}</span></div><div style="font-size:12px;font-weight:500;margin-bottom:2px">${opTx}</div><div style="font-size:10px;color:#bbb;margin-bottom:4px">${venueStr}</div>${markHtml}${memoHtml}`;
       } else {
-        row.innerHTML=`<div class="l-date" style="color:${wC}">${dateStr}</div><span class="${badgeCl}">${badgeTx}</span>${customTag}<div class="l-op">${opTx}</div><div class="l-venue">${venueStr}</div>${markHtml}${memoHtml}`;
+        row.innerHTML=`<div class="l-date" style="color:${wC}">${dateStr}</div><span class="${badgeCl}">${badgeTx}</span><div class="l-op">${opTx}</div><div class="l-venue">${venueStr}</div>${markHtml}${memoHtml}`;
       }
       row.addEventListener('click',e=>openPopup(e,ev.team,ev.d,ev.idx,clickOp,venueStr,ev.isCustom,ev.sport));
       rows.appendChild(row);

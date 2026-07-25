@@ -712,7 +712,7 @@ function renderCal(){
 }
 
 function evLabelMobile(ev){
-  const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.isCustom;
+  const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.team==='custom'||!!ev.isCustom;
   if(isJP) return (ev.sport==='⚽ サッカー'?'⚽':'🏀')+' 日本代表';
   if(isCup) return '⚽'+cupAbbr(ev.cup)+' '+abbr(ev.op);
   // カスタム試合：「チームA vs チームB」を分割して略称変換
@@ -745,7 +745,7 @@ function makeCell(y,m,d,other){
   const num=document.createElement('div');num.className='day-num'+(dow===0?' sun':dow===6?' sat':'');num.textContent=d;cell.appendChild(num);
   allEvs().filter(e=>e.d===ds).forEach(ev=>{
     const tag=document.createElement('div');
-    const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.isCustom,isTbd=ev.h===null||ev.h===undefined;
+    const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.team==='custom'||!!ev.isCustom,isTbd=ev.h===null||ev.h===undefined;
     let cls='event ';
     if(isCustom) cls+=(ev.sport==='basket'?'ev-custom-basket':'ev-custom-soccer')+(isTbd?'':(ev.h?'':' away'));
     else if(isJP) cls+='ev-japan'+(isTbd?'':(ev.h?'':' away'));

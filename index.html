@@ -816,21 +816,21 @@ function evLabelMobileHTML(ev,landscape){
     // 2チームの場合は常に略称（ロゴ2つはスペース不足のため）
     const parts=ev.op.split(' vs ');
     const icon=ev.sport==='basket'?'🏀':'⚽';
-    const abbrOp=parts.map(n=>abbr(n.trim())).join('<span class="ev-vs">vs</span>');
+    const abbrOp=parts.map(n=>abbr(n.trim())).join('<span class="ev-vs"> - </span>');
     if(landscape) return `<span class="ev-logo-abbr">${icon}<span class="ev-abbr"> ${abbrOp}</span></span>`;
     return `<span class="ev-text-wrap">${icon} ${abbrOp}</span>`;
   }
   // ブレックス・セレッソの対戦相手：ロゴあれば表示
   const logoUrl=TEAM_LOGO[ev.op];
-  const preLabel=ev.preseason?'<span style="font-size:7px;background:#f59e0b;color:#fff;border-radius:2px;padding:0 2px;margin-right:1px">PS</span>':'';
+  const preLabel=ev.preseason?'<span style="font-size:7px;background:#f59e0b;color:#fff;border-radius:2px;padding:0 2px;display:block;text-align:center;line-height:1.4">PS</span>':'';
   if(landscape){
     // 横表示：ロゴ＋略称を横並び
-    if(logoUrl) return `<span class="ev-logo-abbr">${preLabel}${logoImg(ev.op)}<span class="ev-abbr"> ${abbr(ev.op)}</span></span>`;
+    if(logoUrl) return `<span class="ev-logo-abbr" style="flex-direction:column;align-items:flex-start">${preLabel}<span style="display:flex;align-items:center;gap:2px">${logoImg(ev.op)}<span class="ev-abbr"> ${abbr(ev.op)}</span></span></span>`;
     const icon=ev.team==='brex'?'🏀':'⚽';
-    return `<span class="ev-logo-abbr">${preLabel}${icon}<span class="ev-abbr"> ${abbr(ev.op)}</span></span>`;
+    return `<span class="ev-logo-abbr" style="flex-direction:column;align-items:flex-start">${preLabel}<span>${icon}<span class="ev-abbr"> ${abbr(ev.op)}</span></span></span>`;
   }
-  // 縦表示：ロゴのみ（大きく）
-  if(logoUrl) return preLabel+logoImg(ev.op);
+  // 縦表示：PSをロゴの上に（flexで縦積み）
+  if(logoUrl) return `<span style="display:flex;flex-direction:column;align-items:center;width:100%">${preLabel}${logoImg(ev.op)}</span>`;
   const icon=ev.team==='brex'?'🏀':'⚽';
   return `<span class="ev-text-wrap">${preLabel}${icon} ${abbr(ev.op)}</span>`;
 }
@@ -842,7 +842,7 @@ function evLabelMobile(ev){
   if(isCup) return '⚽'+cupAbbr(ev.cup)+' '+abbr(ev.op);
   if(isCustom){
     const icon=ev.sport==='basket'?'🏀':'⚽';
-    const abbrOp=ev.op.split(' vs ').map(n=>abbr(n.trim())).join(' vs ');
+    const abbrOp=ev.op.split(' vs ').map(n=>abbr(n.trim())).join(' - ');
     return icon+' '+abbrOp;
   }
   const icon=ev.team==='brex'?'🏀':'⚽';
@@ -941,7 +941,7 @@ function renderList(){
         badgeCl='l-badge '+(ev.sport==='basket'?'lb-custom-b':'lb-custom-s');
         badgeTx=(ev.sport==='basket'?'🏀':'⚽')+' 追加';
         // スマホはabbr略称、PCはそのまま
-        const opName=mob?ev.op.split(' vs ').map(n=>abbr(n)).join(' vs '):ev.op;
+        const opName=mob?ev.op.split(' vs ').map(n=>abbr(n)).join(' - '):ev.op;
         opTx=opName;
       }
       if(isJP){

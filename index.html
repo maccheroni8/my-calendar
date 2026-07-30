@@ -78,11 +78,13 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .ev-brex{background:#002B5C;color:#fff}
 .ev-cerezo{background:#E83D7A;color:#fff}
 .ev-japan{background:#CC0000;color:#fff}
+.ev-japan-soccer{background:#001E55;color:#fff}
 .ev-custom-basket{background:#002B5C;color:#fff}
 .ev-custom-soccer{background:#E83D7A;color:#fff}
 .ev-brex.away{background:transparent;color:#002B5C;border:1px solid #002B5C}
 .ev-cerezo.away{background:transparent;color:#E83D7A;border:1px solid #E83D7A}
 .ev-japan.away{background:transparent;color:#CC0000;border:1px solid #CC0000}
+.ev-japan-soccer.away{background:transparent;color:#001E55;border:1px solid #001E55}
 .ev-cup{background:#7c3aed;color:#fff}
 .badge{font-size:7px;flex-shrink:0;border-radius:2px;padding:0 2px;font-weight:700}
 .bdg-go{background:#22c55e;color:#fff}.bdg-maybe{background:#f59e0b;color:#fff}.bdg-price{background:#a78bfa;color:#fff}
@@ -90,6 +92,8 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .ev-logo{width:20px;height:20px;object-fit:contain;vertical-align:middle;flex-shrink:0}
 .ev-abbr{font-size:9px;font-weight:700;vertical-align:middle}
 .ev-vs{font-size:8px;opacity:.8}
+/* スマホ横表示：ロゴ＋略称を横並び */
+.ev-logo-abbr{display:flex;align-items:center;gap:2px;width:100%;justify-content:flex-start}
 
 /* ── リスト ── */
 #list-view{display:none}
@@ -114,7 +118,7 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .l-date{font-size:11px;font-weight:700;white-space:nowrap}
 .l-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0}
 .lb-brex{background:#002B5C;color:#fff}.lb-cerezo{background:#E83D7A;color:#fff}
-.lb-japan{background:#CC0000;color:#fff}.lb-brex-a{background:transparent;color:#002B5C;border:1.5px solid #002B5C}
+.lb-japan{background:#CC0000;color:#fff}.lb-japan-soccer{background:#001E55;color:#fff}.lb-brex-a{background:transparent;color:#002B5C;border:1.5px solid #002B5C}
 .lb-cerezo-a{background:transparent;color:#E83D7A;border:1.5px solid #E83D7A}.lb-cup{background:#7c3aed;color:#fff}
 .lb-custom-b{background:#002B5C;color:#fff}.lb-custom-s{background:#E83D7A;color:#fff}
 .l-op{font-size:12px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -154,7 +158,7 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .memo-row{display:flex;gap:6px;margin-top:6px}
 .memo-save{flex:1;padding:10px;border:none;border-radius:8px;background:#002B5C;color:#fff;font-size:13px;font-weight:700;cursor:pointer}
 .memo-save.cerezo{background:#E83D7A}
-.memo-save.japan{background:#CC0000}
+.memo-save.japan{background:#CC0000}.memo-save.japan-soccer{background:#001E55}
 .memo-save.custom{background:#555}
 .memo-clr{padding:10px 14px;border:1.5px solid #eee;border-radius:8px;background:#fff;color:#ccc;font-size:12px;cursor:pointer}
 .memo-clr:hover{background:#fee2e2;color:#e03;border-color:#fca5a5}
@@ -305,7 +309,7 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
       <div class="leg-item"><div class="leg-dot" style="background:#E83D7A"></div>セレッソH</div>
       <div class="leg-item"><div class="leg-dot" style="border:1.5px solid #E83D7A"></div>セレッソA</div>
       <div class="leg-item"><div class="leg-dot" style="background:#7c3aed"></div>ルヴァン</div>
-      <div class="leg-item"><div class="leg-dot" style="background:#CC0000"></div>🇯🇵代表</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#001E55"></div>🇯🇵代表</div>
     </div>
   </div>
 
@@ -486,15 +490,24 @@ const ABBR={
 };
 function abbr(name){return ABBR[name]||name;}
 
-// カップ戦略称
-const CUP_ABBR={'ルヴァンカップ':'ル','天皇杯':'天','ACL':'ACL','スーパーカップ':'SC'};
+// カップ戦略称（スマホ2行表示用：フルネームで返す）
+const CUP_ABBR={'ルヴァンカップ':'ルヴァン','天皇杯':'天皇杯','ACL':'ACL','スーパーカップ':'SC'};
 function cupAbbr(cupName){
   for(const k of Object.keys(CUP_ABBR)){if(cupName.includes(k))return CUP_ABBR[k];}
-  return cupName.slice(0,2);
+  return cupName.slice(0,4);
+}
+// カップ戦のスポーツ絵文字判定（basketキーワードがあれば🏀）
+function cupIcon(cupName,team){
+  if(team==='brex'||cupName.includes('バスケ')||cupName.includes('Bリーグ'))return '🏀';
+  return '⚽';
 }
 
 // ── 静的データ ──
 const BREX=[
+  // プレシーズンゲーム
+  {d:'2026-09-05',h:true,op:'越谷アルファーズ',venue:'日環アリーナ栃木 15:00',preseason:true},
+  {d:'2026-09-06',h:true,op:'仙台89ERS',venue:'日環アリーナ栃木 15:00',preseason:true},
+  // リーグ戦
   {d:'2026-09-26',h:true,op:'横浜ビー・コルセアーズ',venue:'日環アリーナ栃木 15:05'},
   {d:'2026-09-27',h:true,op:'横浜ビー・コルセアーズ',venue:'日環アリーナ栃木 15:05'},
   {d:'2026-10-03',h:false,op:'富山グラウジーズ',venue:'YKK APアリーナ 14:05'},
@@ -755,6 +768,7 @@ const TEAM_LOGO={
   '佐賀バルーナーズ':'https://bleague.bl.kuroco-img.app/v=1772176012/files/user/common/img/logo/2026/s/sg.png',
   '長崎ヴェルカ':'https://bleague.bl.kuroco-img.app/v=1772176011/files/user/common/img/logo/2026/s/nv.png',
   'レバンガ北海道':'https://bleague.bl.kuroco-img.app/v=1782853258/files/user/common/img/logo/2026/s/lh.png',
+  '越谷アルファーズ':'https://bleague.bl.kuroco-img.app/v=1772176013/files/user/common/img/logo/2026/s/ka.png',
   // セレッソ対戦相手（Jリーグ）
   'ファジアーノ岡山':'https://www.cerezo.jp/emblem/30314.png',
   'アビスパ福岡':'https://www.cerezo.jp/emblem/135.png',
@@ -784,33 +798,41 @@ function logoImg(name){
   return `<img class="ev-logo" src="${url}" alt="${abbr(name)}" onerror="this.style.display='none';this.nextSibling.style.display='inline'"><span class="ev-abbr" style="display:none">${abbr(name)}</span>`;
 }
 
-function evLabelMobileHTML(ev){
+function evLabelMobileHTML(ev,landscape){
   const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.team==='custom'||!!ev.isCustom;
   if(isJP){
     const icon=ev.sport==='⚽ サッカー'?'⚽':'🏀';
+    if(landscape) return `<span class="ev-logo-abbr">${icon}<span class="ev-abbr"> 日本代表</span></span>`;
     return `<span class="ev-text-wrap">${icon} 日本代表</span>`;
   }
   if(isCup){
-    // 「⚽ル 未定（仮）」のように折り返して表示
-    const cupText='⚽'+cupAbbr(ev.cup);
+    const icon=cupIcon(ev.cup,ev.team);
+    const cupName=cupAbbr(ev.cup);
     const opText=ev.op==='未定（仮）'?'（仮）':abbr(ev.op);
-    return `<span class="ev-text-wrap">${cupText}<br>${opText}</span>`;
+    if(landscape) return `<span class="ev-logo-abbr">${icon}<span class="ev-abbr"> ${cupName}</span></span>`;
+    return `<span class="ev-text-wrap">${icon}${cupName}<br>${opText}</span>`;
   }
   if(isCustom){
+    // 2チームの場合は常に略称（ロゴ2つはスペース不足のため）
     const parts=ev.op.split(' vs ');
-    const hasLogo=parts.some(n=>TEAM_LOGO[n.trim()]);
-    const icon=hasLogo?'':( ev.sport==='basket'?'🏀':'⚽');
-    return (icon?`<span class="ev-text-wrap">${icon} `:'')
-      +parts.map(n=>logoImg(n.trim())).join('<span class="ev-vs">vs</span>')
-      +(icon?'</span>':'');
+    const icon=ev.sport==='basket'?'🏀':'⚽';
+    const abbrOp=parts.map(n=>abbr(n.trim())).join('<span class="ev-vs">vs</span>');
+    if(landscape) return `<span class="ev-logo-abbr">${icon}<span class="ev-abbr"> ${abbrOp}</span></span>`;
+    return `<span class="ev-text-wrap">${icon} ${abbrOp}</span>`;
   }
-  // ブレックス・セレッソの対戦相手
+  // ブレックス・セレッソの対戦相手：ロゴあれば表示
   const logoUrl=TEAM_LOGO[ev.op];
-  const icon=logoUrl?'':( ev.team==='brex'?'🏀':'⚽');
-  if(logoUrl){
-    return logoImg(ev.op);
+  const preLabel=ev.preseason?'<span style="font-size:7px;background:#f59e0b;color:#fff;border-radius:2px;padding:0 2px;margin-right:1px">PS</span>':'';
+  if(landscape){
+    // 横表示：ロゴ＋略称を横並び
+    if(logoUrl) return `<span class="ev-logo-abbr">${preLabel}${logoImg(ev.op)}<span class="ev-abbr"> ${abbr(ev.op)}</span></span>`;
+    const icon=ev.team==='brex'?'🏀':'⚽';
+    return `<span class="ev-logo-abbr">${preLabel}${icon}<span class="ev-abbr"> ${abbr(ev.op)}</span></span>`;
   }
-  return `<span class="ev-text-wrap">${icon} ${abbr(ev.op)}</span>`;
+  // 縦表示：ロゴのみ（大きく）
+  if(logoUrl) return preLabel+logoImg(ev.op);
+  const icon=ev.team==='brex'?'🏀':'⚽';
+  return `<span class="ev-text-wrap">${preLabel}${icon} ${abbr(ev.op)}</span>`;
 }
 
 function evLabelMobile(ev){
@@ -833,7 +855,8 @@ function evLabelPC(ev){
   if(isCustom){const icon=ev.sport==='basket'?'🏀':'⚽';const hoa=isTbd?'':(ev.h?'H ':'A ');return `${icon}${hoa}${ev.op}`;}
   const icon=ev.team==='brex'?'🏀':'⚽';
   const hoa=isTbd?'':(ev.h?'H ':'A ');
-  return `${icon}${hoa}${ev.op}`;
+  const pre=ev.preseason?'[PS]':'';
+  return `${icon}${pre}${hoa}${ev.op}`;
 }
 
 function makeCell(y,m,d,other){
@@ -850,13 +873,17 @@ function makeCell(y,m,d,other){
     const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.team==='custom'||!!ev.isCustom,isTbd=ev.h===null||ev.h===undefined;
     let cls='event ';
     if(isCustom) cls+=(ev.sport==='basket'?'ev-custom-basket':'ev-custom-soccer')+(isTbd?'':(ev.h?'':' away'));
-    else if(isJP) cls+='ev-japan'+(isTbd?'':(ev.h?'':' away'));
+    else if(isJP){
+      const isSoccer=ev.sport==='⚽ サッカー';
+      cls+=(isSoccer?'ev-japan-soccer':'ev-japan')+(isTbd?'':(ev.h?'':' away'));
+    }
     else if(isCup) cls+='ev-cup';
     else cls+=`ev-${ev.team}`+(isTbd?'':(ev.h?'':' away'));
     tag.className=cls;
     const lbl=document.createElement('span');lbl.className='ev-label';
     if(isMobile()){
-      lbl.innerHTML=evLabelMobileHTML(ev);
+      const landscape=window.innerWidth>window.innerHeight;
+      lbl.innerHTML=evLabelMobileHTML(ev,landscape);
     } else {
       lbl.textContent=evLabelPC(ev);
     }
@@ -885,7 +912,10 @@ function renderList(){
   let html=card('📊 合計',evs,'');
   if(showBrex)html+=card('🏀 ブレックス',evs.filter(e=>e.team==='brex'),'#002B5C');
   if(showCerezo)html+=card('⚽ セレッソ',evs.filter(e=>e.team==='cerezo'),'#E83D7A');
-  if(showJapan)html+=card('🇯🇵 日本代表',evs.filter(e=>e.team==='japan'),'#CC0000');
+  if(showJapan){
+    const jEvs=evs.filter(e=>e.team==='japan');
+    html+=card('🇯🇵 日本代表',jEvs,'#001E55');
+  }
   const cust=evs.filter(e=>e.team==='custom');
   if(cust.length)html+=card('➕ 追加試合',cust,'#555');
   sec.innerHTML=html;
@@ -914,7 +944,11 @@ function renderList(){
         const opName=mob?ev.op.split(' vs ').map(n=>abbr(n)).join(' vs '):ev.op;
         opTx=opName;
       }
-      else if(isJP){badgeCl='l-badge lb-japan';badgeTx=`🇯🇵 ${ev.sport}`;opTx=`${ev.competition} vs ${ev.op}`;}
+      if(isJP){
+        const isSoccer=ev.sport==='⚽ サッカー';
+        badgeCl='l-badge '+(isSoccer?'lb-japan-soccer':'lb-japan');
+        badgeTx=`🇯🇵 ${ev.sport}`;opTx=`${ev.competition} vs ${ev.op}`;
+      }
       else if(isCup){badgeCl='l-badge lb-cup';badgeTx='🏆 '+ev.cup;opTx=ev.op;}
       else{const isB=ev.team==='brex';badgeCl='l-badge '+(isB?(ev.h?'lb-brex':'lb-brex-a'):(ev.h?'lb-cerezo':'lb-cerezo-a'));badgeTx=(isB?'🏀 ブレックス':'⚽ セレッソ')+(isTbd?'':(ev.h?' HOME':' AWAY'));opTx='vs '+ev.op;}
       const markHtml=ev.mv?`<span class="l-mark lm-${ev.mv}">${ev.mv==='go'?'✅ 行く':ev.mv==='maybe'?'△ できたら':'¥ 値段次第'}</span>`:`<span class="l-mark lm-none">未定</span>`;
@@ -940,7 +974,11 @@ function openPopup(e,team,date,idx,op,info,isCustom,sport){
   popupTarget={team,date,idx,isCustom};
   const popup=document.getElementById('popup');
   const tEl=document.getElementById('popup-team');
-  if(team==='japan'){tEl.textContent=op;tEl.style.color='#CC0000';}
+  if(team==='japan'){
+    const isSoccer=sport==='⚽ サッカー';
+    tEl.textContent=op;
+    tEl.style.color=isSoccer?'#001E55':'#CC0000';
+  }
   else if(isCustom){tEl.textContent=(sport==='basket'?'🏀':'⚽')+' '+op;tEl.style.color='#555';}
   else{tEl.textContent=(team==='brex'?'🏀 宇都宮ブレックス':'⚽ セレッソ大阪')+' vs '+op;tEl.style.color=team==='brex'?'#002B5C':'#E83D7A';}
   // 会場・時刻
@@ -956,7 +994,7 @@ function openPopup(e,team,date,idx,op,info,isCustom,sport){
   ['go','maybe','price'].forEach(v=>document.getElementById('mb-'+v).className='mark-btn'+(cur===v?' active-'+v:''));
   document.getElementById('memo-ta').value=getMemo(team,date,idx);
   document.getElementById('memo-tag').style.opacity='0';
-  document.getElementById('memo-save').className='memo-save'+(team==='cerezo'?' cerezo':team==='japan'?' japan':isCustom?' custom':'');
+  document.getElementById('memo-save').className='memo-save'+(team==='cerezo'?' cerezo':team==='japan'?(sport==='⚽ サッカー'?' japan-soccer':' japan'):isCustom?' custom':'');
   // 削除ボタン（カスタムのみ表示）
   document.getElementById('popup-delete').style.display=isCustom?'block':'none';
   popup.style.visibility='hidden';
@@ -1065,6 +1103,9 @@ window.submitAddGame=function(){
 // ── ナビ ──
 document.getElementById('prev').onclick=()=>{curM--;if(curM<1){curM=12;curY--;}renderCal();};
 document.getElementById('next').onclick=()=>{curM++;if(curM>12){curM=1;curY++;}renderCal();};
+// 画面回転時に再描画（縦⇔横でロゴ/略称表示を切替）
+window.addEventListener('orientationchange',()=>{setTimeout(renderCurrent,100);});
+window.addEventListener('resize',()=>{if(isMobile())renderCal();});
 
 // ── 初期化：Firebaseの応答を待たずに即カレンダーを表示 ──
 const t2=new Date();curY=t2.getFullYear();curM=t2.getMonth()+1;

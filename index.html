@@ -215,22 +215,21 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
   .cal-scroll-wrap::-webkit-scrollbar{display:none}
   .cal-scroll-inner{display:block;min-width:490px}
   .cal-scroll-inner .cal-grid{grid-template-columns:repeat(7,64px);gap:2px}
-  /* セル：2試合縦並び */
-  .cal-scroll-inner .day-cell{min-height:120px;padding:3px 2px;display:flex;flex-direction:column;gap:2px}
-  .cal-scroll-inner .day-num{flex-shrink:0;font-size:10px}
+  /* セル：日付＋最大2試合がきれいに収まる高さ */
+  .cal-scroll-inner .day-cell{min-height:110px;padding:2px;display:flex;flex-direction:column;gap:1px;overflow:hidden}
+  .cal-scroll-inner .day-num{flex-shrink:0;font-size:10px;margin-bottom:1px}
   .cal-scroll-inner .dow{font-size:10px;padding:5px 0}
-  /* イベント：上下で半分ずつ、縦積みレイアウト */
-  .cal-scroll-inner .event{padding:2px;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;border-radius:4px;gap:1px;overflow:hidden}
-  /* ロゴエリア */
-  .cal-scroll-inner .ev-label{display:flex;align-items:center;justify-content:center;width:100%;flex:1;min-height:0}
-  /* ロゴ：イベント枠いっぱいに */
-  .cal-scroll-inner .ev-logo{width:100%;height:100%;max-width:46px;max-height:46px;object-fit:contain;display:block}
-  .cal-scroll-inner .ev-abbr{font-size:9px;font-weight:700;text-align:center;white-space:normal;word-break:break-all;line-height:1.2}
-  .cal-scroll-inner .ev-vs{font-size:7px;opacity:.7;flex-shrink:0}
-  /* バッジ：ロゴの下に独立配置 */
-  .cal-scroll-inner .badge{display:block;font-size:8px;padding:1px 4px;border-radius:3px;flex-shrink:0;align-self:center;line-height:1.3}
-  /* カップ戦・未定テキスト：複数行折り返し */
-  .cal-scroll-inner .ev-text-wrap{font-size:8px;font-weight:700;text-align:center;white-space:normal;word-break:break-all;line-height:1.3;width:100%;flex:1;display:flex;align-items:center;justify-content:center}
+  /* イベント：残りスペースを均等に分割 */
+  .cal-scroll-inner .event{padding:1px;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:3px;overflow:hidden}
+  /* ロゴエリア：イベント枠いっぱい */
+  .cal-scroll-inner .ev-label{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
+  .cal-scroll-inner .ev-logo{width:100%;height:100%;max-width:40px;max-height:40px;object-fit:contain;display:block}
+  .cal-scroll-inner .ev-abbr{font-size:8px;font-weight:700;text-align:center;white-space:normal;word-break:break-all;line-height:1.2}
+  .cal-scroll-inner .ev-vs{font-size:6px;opacity:.7;flex-shrink:0}
+  /* バッジ：最下部に小さく */
+  .cal-scroll-inner .badge{display:block;font-size:7px;padding:0 3px;border-radius:2px;flex-shrink:0;align-self:center;line-height:1.3;margin-top:1px}
+  /* テキスト折り返し（カップ戦・日本代表） */
+  .cal-scroll-inner .ev-text-wrap{font-size:8px;font-weight:700;text-align:center;white-space:normal;word-break:break-all;line-height:1.3;width:100%;padding:1px}
 
   .sum-card{min-width:calc(50% - 4px)}
   .popup{position:fixed!important;left:0!important;right:0!important;bottom:0!important;top:auto!important;width:100%!important;max-width:100%!important;border-radius:18px 18px 0 0;max-height:88vh;overflow-y:auto;padding:16px 16px 32px}
@@ -450,14 +449,33 @@ const J3=[
 
 // 略称テーブル
 const ABBR={
-  // B.PREMIER
-  '宇都宮ブレックス':'宇都宮B','千葉ジェッツ':'千葉J','アルバルク東京':'A東京','川崎ブレイブサンダース':'川崎BS',
-  '横浜ビー・コルセアーズ':'横浜BC','アルティーリ千葉':'A千葉','茨城ロボッツ':'茨城','群馬クレインサンダーズ':'群馬',
-  '仙台89ERS':'仙台89','秋田ノーザンハピネッツ':'秋田','信州ブレイブウォリアーズ':'信州','富山グラウジーズ':'富山',
-  '名古屋ダイヤモンドドルフィンズ':'名古屋DD','滋賀レイクス':'滋賀','京都ハンナリーズ':'京都H','大阪エヴェッサ':'大阪E',
-  '島根スサノオマジック':'島根','広島ドラゴンフライズ':'広島DF','琉球ゴールデンキングス':'琉球','長崎ヴェルカ':'長崎V',
-  '佐賀バルーナーズ':'佐賀','三遠ネオフェニックス':'三遠','シーホース三河':'三河','神戸ストークス':'神戸ST',
-  'レバンガ北海道':'北海道','東京サンロッカーズ渋谷':'SR渋谷',
+  // B.PREMIER（指定略称）
+  'レバンガ北海道':'北海道',
+  '仙台89ERS':'仙台',
+  '秋田ノーザンハピネッツ':'秋田',
+  '茨城ロボッツ':'茨城',
+  '宇都宮ブレックス':'宇都宮',
+  '群馬クレインサンダーズ':'群馬',
+  'アルティーリ千葉':'A千葉',
+  '千葉ジェッツ':'千葉J',
+  'アルバルク東京':'A東京',
+  '東京サンロッカーズ渋谷':'東京SR',
+  '川崎ブレイブサンダース':'川崎',
+  '横浜ビー・コルセアーズ':'横浜BC',
+  '富山グラウジーズ':'富山',
+  '信州ブレイブウォリアーズ':'信州',
+  '三遠ネオフェニックス':'三遠',
+  'シーホース三河':'三河',
+  '名古屋ダイヤモンドドルフィンズ':'名古屋D',
+  '滋賀レイクス':'滋賀',
+  '京都ハンナリーズ':'京都',
+  '大阪エヴェッサ':'大阪',
+  '神戸ストークス':'神戸',
+  '島根スサノオマジック':'島根',
+  '広島ドラゴンフライズ':'広島',
+  '佐賀バルーナーズ':'佐賀',
+  '長崎ヴェルカ':'長崎',
+  '琉球ゴールデンキングス':'琉球',
   // B.ONE
   '青森ワッツ':'青森','岩手ビッグブルズ':'岩手','山形ワイヴァンズ':'山形W','福島ファイヤーボンズ':'福島FB',
   '越谷アルファーズ':'越谷','さいたまブロンコス':'さいたま','東京ユナイテッドバスケットボールクラブ':'東京U',
@@ -822,7 +840,7 @@ function evLabelMobileHTML(ev,landscape){
   }
   // ブレックス・セレッソの対戦相手：ロゴあれば表示
   const logoUrl=TEAM_LOGO[ev.op];
-  const preLabel=ev.preseason?'<span style="font-size:7px;background:#f59e0b;color:#fff;border-radius:2px;padding:0 2px;display:block;text-align:center;line-height:1.4">PS</span>':'';
+  const preLabel='';
   if(landscape){
     // 横表示：ロゴ＋略称を横並び
     if(logoUrl) return `<span class="ev-logo-abbr" style="flex-direction:column;align-items:flex-start">${preLabel}<span style="display:flex;align-items:center;gap:2px">${logoImg(ev.op)}<span class="ev-abbr"> ${abbr(ev.op)}</span></span></span>`;
@@ -855,8 +873,7 @@ function evLabelPC(ev){
   if(isCustom){const icon=ev.sport==='basket'?'🏀':'⚽';const hoa=isTbd?'':(ev.h?'H ':'A ');return `${icon}${hoa}${ev.op}`;}
   const icon=ev.team==='brex'?'🏀':'⚽';
   const hoa=isTbd?'':(ev.h?'H ':'A ');
-  const pre=ev.preseason?'[PS]':'';
-  return `${icon}${pre}${hoa}${ev.op}`;
+  return `${icon}${hoa}${ev.op}`;
 }
 
 function makeCell(y,m,d,other){

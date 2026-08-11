@@ -38,6 +38,8 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .chip.cerezo.off{background:transparent;color:#E83D7A;border-color:#E83D7A}
 .chip.japan{background:#CC0000;color:#fff;border-color:#CC0000}
 .chip.japan.off{background:transparent;color:#CC0000;border-color:#CC0000}
+.chip.japan-soccer{background:#001E55;color:#fff;border-color:#001E55}
+.chip.japan-soccer.off{background:transparent;color:#001E55;border-color:#001E55}
 .chip.neutral{background:#555;color:#fff;font-size:11px}
 .chip.add-btn{background:#fff;color:#333;border-color:#ddd;font-size:11px}
 .chip.add-btn:hover{background:#f5f5f5}
@@ -203,7 +205,7 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
   /* PCツールバー行を非表示、スマホ行を表示 */
   .toolbar{flex-direction:column;align-items:stretch;padding:8px 10px;gap:6px}
   .toolbar-left{display:none}
-  #mob-team-row{display:grid!important;grid-template-columns:repeat(4,1fr);gap:4px}
+  #mob-team-row{display:grid!important;grid-template-columns:repeat(5,1fr);gap:4px}
   #mob-team-row .chip{padding:5px 2px;font-size:10px;justify-content:center;border-radius:14px;gap:2px}
   #mob-mark-row{display:grid!important;grid-template-columns:repeat(4,1fr);gap:4px}
   #mob-mark-row .mf-btn{padding:5px 2px;font-size:10px;text-align:center;border-radius:12px}
@@ -255,7 +257,8 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
     <div class="toolbar-left">
       <div class="chip brex" id="chip-brex" onclick="toggleTeam('brex')">🏀 ブレックス</div>
       <div class="chip cerezo" id="chip-cerezo" onclick="toggleTeam('cerezo')">⚽ セレッソ</div>
-      <div class="chip japan" id="chip-japan" onclick="toggleTeam('japan')">🇯🇵 日本代表</div>
+      <div class="chip japan" id="chip-japan" onclick="toggleTeam('japan')">🏀 日本代表</div>
+      <div class="chip japan-soccer" id="chip-japan-soccer" onclick="toggleTeam('japan-soccer')">⚽ 日本代表</div>
       <div class="chip neutral" onclick="setAll()">すべて</div>
       <div style="width:1px;height:24px;background:#e0e0e0;margin:0 2px"></div>
       <div class="mf-btn all active" id="mf-all" onclick="setMF('all')">すべて</div>
@@ -267,7 +270,8 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
     <div class="toolbar-row team-row" style="display:none" id="mob-team-row">
       <div class="chip brex" onclick="toggleTeam('brex')" id="mob-chip-brex">🏀 ブレックス</div>
       <div class="chip cerezo" onclick="toggleTeam('cerezo')" id="mob-chip-cerezo">⚽ セレッソ</div>
-      <div class="chip japan" onclick="toggleTeam('japan')" id="mob-chip-japan">🇯🇵 日本代表</div>
+      <div class="chip japan" onclick="toggleTeam('japan')" id="mob-chip-japan">🏀 日本代表</div>
+      <div class="chip japan-soccer" onclick="toggleTeam('japan-soccer')" id="mob-chip-japan-soccer">⚽ 日本代表</div>
       <div class="chip neutral" onclick="setAll()">すべて</div>
     </div>
     <div class="toolbar-row mark-row" style="display:none" id="mob-mark-row">
@@ -308,7 +312,8 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
       <div class="leg-item"><div class="leg-dot" style="background:#E83D7A"></div>セレッソH</div>
       <div class="leg-item"><div class="leg-dot" style="border:1.5px solid #E83D7A"></div>セレッソA</div>
       <div class="leg-item"><div class="leg-dot" style="background:#7c3aed"></div>ルヴァン</div>
-      <div class="leg-item"><div class="leg-dot" style="background:#001E55"></div>🇯🇵代表</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#CC0000"></div>🏀🇯🇵代表</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#001E55"></div>⚽🇯🇵代表</div>
     </div>
   </div>
 
@@ -671,7 +676,7 @@ const JAPAN=[
 const DOW=['月','火','水','木','金','土','日'];
 const ML=['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 let marks={}, memos={}, customGames=[];
-let showBrex=true,showCerezo=true,showJapan=true;
+let showBrex=true,showCerezo=true,showJapanBasket=true,showJapanSoccer=true;
 let mf='all', curView='cal', layout='vert';
 let curY=2026, curM=8;
 let popupTarget=null;
@@ -715,15 +720,20 @@ function allEvs(){
   const evs=[];
   if(showBrex) BREX.forEach((e,i)=>{const mv=getMark('brex',e.d,i);if(mf==='all'||mv===mf)evs.push({...e,team:'brex',idx:i,mv});});
   if(showCerezo) CEREZO.forEach((e,i)=>{const mv=getMark('cerezo',e.d,i);if(mf==='all'||mv===mf)evs.push({...e,team:'cerezo',idx:i,mv});});
-  if(showJapan) JAPAN.forEach((e,i)=>{const mv=getMark('japan',e.d,i);if(mf==='all'||mv===mf)evs.push({...e,team:'japan',idx:i,mv});});
+  JAPAN.forEach((e,i)=>{
+    const show=e.sport==='⚽ サッカー'?showJapanSoccer:showJapanBasket;
+    if(!show)return;
+    const mv=getMark('japan',e.d,i);
+    if(mf==='all'||mv===mf)evs.push({...e,team:'japan',idx:i,mv});
+  });
   customGames.forEach((e,i)=>{const mv=getMark('custom',e.d,i);if(mf==='all'||mv===mf)evs.push({...e,team:'custom',idx:i,mv,isCustom:true});});
   return evs;
 }
 
 // ── フィルタ ──
 function syncChips(){
-  ['brex','cerezo','japan'].forEach(x=>{
-    const on=x==='brex'?showBrex:x==='cerezo'?showCerezo:showJapan;
+  ['brex','cerezo','japan','japan-soccer'].forEach(x=>{
+    const on=x==='brex'?showBrex:x==='cerezo'?showCerezo:x==='japan'?showJapanBasket:showJapanSoccer;
     const pc=document.getElementById('chip-'+x);
     const mob=document.getElementById('mob-chip-'+x);
     if(pc) pc.classList.toggle('off',!on);
@@ -739,10 +749,13 @@ function syncMF(){
   });
 }
 window.toggleTeam=function(t){
-  if(t==='brex')showBrex=!showBrex;else if(t==='cerezo')showCerezo=!showCerezo;else showJapan=!showJapan;
+  if(t==='brex')showBrex=!showBrex;
+  else if(t==='cerezo')showCerezo=!showCerezo;
+  else if(t==='japan')showJapanBasket=!showJapanBasket;
+  else showJapanSoccer=!showJapanSoccer;
   syncChips();renderCurrent();
 };
-window.setAll=function(){showBrex=true;showCerezo=true;showJapan=true;syncChips();renderCurrent();};
+window.setAll=function(){showBrex=true;showCerezo=true;showJapanBasket=true;showJapanSoccer=true;syncChips();renderCurrent();};
 window.setMF=function(f){mf=f;syncMF();renderCurrent();};
 window.setView=function(v){
   curView=v;
@@ -942,9 +955,13 @@ function renderList(){
   let html=card('📊 合計',evs,'');
   if(showBrex)html+=card('🏀 ブレックス',evs.filter(e=>e.team==='brex'),'#002B5C');
   if(showCerezo)html+=card('⚽ セレッソ',evs.filter(e=>e.team==='cerezo'),'#E83D7A');
-  if(showJapan){
-    const jEvs=evs.filter(e=>e.team==='japan');
-    html+=card('🇯🇵 日本代表',jEvs,'#001E55');
+  if(showJapanBasket){
+    const jbEvs=evs.filter(e=>e.team==='japan'&&e.sport==='🏀 バスケ');
+    html+=card('🏀 日本代表',jbEvs,'#CC0000');
+  }
+  if(showJapanSoccer){
+    const jsEvs=evs.filter(e=>e.team==='japan'&&e.sport==='⚽ サッカー');
+    html+=card('⚽ 日本代表',jsEvs,'#001E55');
   }
   const cust=evs.filter(e=>e.team==='custom');
   if(cust.length)html+=card('➕ 追加試合',cust,'#555');

@@ -1,0 +1,12 @@
+{
+  "name": "my-calendar",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fetch-scores": "node scripts/fetch-scores.mjs"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "firebase-admin": "^12.7.0"
+  }
+}

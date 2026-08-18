@@ -90,6 +90,8 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .ev-cup{background:#7c3aed;color:#fff}
 .badge{font-size:7px;flex-shrink:0;border-radius:2px;padding:0 2px;font-weight:700}
 .bdg-go{background:#22c55e;color:#fff}.bdg-maybe{background:#f59e0b;color:#fff}.bdg-price{background:#a78bfa;color:#fff}
+.badge-score{font-size:7px;flex-shrink:0;border-radius:2px;padding:0 2px;font-weight:700;white-space:nowrap}
+.bdg-win{background:#0ea5e9;color:#fff}.bdg-lose{background:#94a3b8;color:#fff}.bdg-draw{background:#cbd5e1;color:#333}
 /* スマホカレンダー内ロゴ */
 .ev-logo{width:20px;height:20px;object-fit:contain;vertical-align:middle;flex-shrink:0}
 .ev-abbr{font-size:9px;font-weight:700;vertical-align:middle}
@@ -128,6 +130,8 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .l-mark{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0}
 .lm-go{background:#22c55e;color:#fff}.lm-maybe{background:#f59e0b;color:#fff}
 .lm-price{background:#a78bfa;color:#fff}.lm-none{background:#f0f0f0;color:#bbb}
+.l-score{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0}
+.ls-win{background:#0ea5e9;color:#fff}.ls-lose{background:#94a3b8;color:#fff}.ls-draw{background:#cbd5e1;color:#333}
 .l-memo{font-size:10px;color:#888;margin-top:3px;padding:3px 6px;background:#faf5ff;border-radius:4px;border-left:2px solid #a78bfa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
 .l-custom-tag{font-size:9px;background:#f0f0f0;color:#888;padding:1px 5px;border-radius:8px;margin-left:4px}
 .legend-wrap{margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:11px;color:#777}
@@ -402,6 +406,7 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { BREX, CEREZO, JAPAN } from './data.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB0qDyXvOlXRmNhYytevAvrTLh2ZNZ5rIQ",
@@ -414,6 +419,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const DOC_REF = doc(db, 'calendar', 'user_data');
+const SCORES_REF = doc(db, 'calendar', 'scores');
 
 // ── チームリスト ──
 const BPREMIER=[
@@ -525,163 +531,16 @@ function cupIcon(cupName,team){
   return '⚽';
 }
 
-// ── 静的データ ──
-const BREX=[
-  // プレシーズンゲーム
-  {d:'2026-09-05',h:true,op:'越谷アルファーズ',venue:'日環アリーナ栃木 15:00',preseason:true},
-  {d:'2026-09-06',h:true,op:'仙台89ERS',venue:'日環アリーナ栃木 15:00',preseason:true},
-  {d:'2026-09-12',h:true,op:'釜山KCCイージス',venue:'日環アリーナ栃木 15:00',preseason:true},
-  {d:'2026-09-13',h:true,op:'釜山KCCイージス',venue:'日環アリーナ栃木 15:00',preseason:true},
-  // リーグ戦
-  {d:'2026-09-26',h:true,op:'横浜ビー・コルセアーズ',venue:'日環アリーナ栃木 15:05'},
-  {d:'2026-09-27',h:true,op:'横浜ビー・コルセアーズ',venue:'日環アリーナ栃木 15:05'},
-  {d:'2026-10-03',h:false,op:'富山グラウジーズ',venue:'YKK APアリーナ 14:05'},
-  {d:'2026-10-04',h:false,op:'富山グラウジーズ',venue:'YKK APアリーナ 14:05'},
-  {d:'2026-10-09',h:false,op:'茨城ロボッツ',venue:'アダストリアみとアリーナ 19:05'},
-  {d:'2026-10-11',h:true,op:'秋田ノーザンハピネッツ',venue:'ブレックスアリーナ宇都宮 15:05'},
-  {d:'2026-10-17',h:false,op:'仙台89ERS',venue:'ゼビオアリーナ仙台 14:05'},
-  {d:'2026-10-19',h:true,op:'群馬クレインサンダーズ',venue:'ブレックスアリーナ宇都宮 19:05'},
-  {d:'2026-10-21',h:true,op:'名古屋ダイヤモンドドルフィンズ',venue:'ブレックスアリーナ宇都宮 19:05'},
-  {d:'2026-10-24',h:true,op:'信州ブレイブウォリアーズ',venue:'ブレックスアリーナ宇都宮 15:05'},
-  {d:'2026-10-26',h:true,op:'川崎ブレイブサンダース',venue:'ブレックスアリーナ宇都宮 19:05'},
-  {d:'2026-10-31',h:false,op:'アルバルク東京',venue:'TOYOTA ARENA TOKYO 17:05'},
-  {d:'2026-11-01',h:false,op:'アルバルク東京',venue:'TOYOTA ARENA TOKYO 15:05'},
-  {d:'2026-11-07',h:true,op:'琉球ゴールデンキングス',venue:'ブレックスアリーナ宇都宮 16:00'},
-  {d:'2026-11-11',h:true,op:'京都ハンナリーズ',venue:'ブレックスアリーナ宇都宮 19:05'},
-  {d:'2026-11-15',h:false,op:'島根スサノオマジック',venue:'松江市総合体育館 13:35'},
-  {d:'2026-11-18',h:true,op:'レバンガ北海道',venue:'ブレックスアリーナ宇都宮 19:05'},
-  {d:'2026-12-04',h:false,op:'シーホース三河',venue:'ウィングアリーナ刈谷 19:35'},
-  {d:'2026-12-06',h:true,op:'三遠ネオフェニックス',venue:'ブレックスアリーナ宇都宮 15:05'},
-  {d:'2026-12-12',h:true,op:'東京サンロッカーズ渋谷',venue:'日環アリーナ栃木 15:05'},
-  {d:'2026-12-13',h:true,op:'東京サンロッカーズ渋谷',venue:'日環アリーナ栃木 15:05'},
-  {d:'2026-12-16',h:false,op:'琉球ゴールデンキングス',venue:'沖縄サントリーアリーナ 19:35'},
-  {d:'2026-12-18',h:false,op:'大阪エヴェッサ',venue:'おおきにアリーナ舞洲 19:05'},
-  {d:'2026-12-20',h:false,op:'大阪エヴェッサ',venue:'おおきにアリーナ舞洲 12:05'},
-  {d:'2026-12-25',h:true,op:'神戸ストークス',venue:'ブレックスアリーナ宇都宮 19:05'},
-  {d:'2026-12-27',h:true,op:'神戸ストークス',venue:'ブレックスアリーナ宇都宮 15:05'},
-  {d:'2027-01-02',h:false,op:'レバンガ北海道',venue:'北海きたえーる 14:05'},
-  {d:'2027-01-03',h:false,op:'レバンガ北海道',venue:'北海きたえーる 14:05'},
-  {d:'2027-01-22',h:false,op:'京都ハンナリーズ',venue:'にっしんでんきアリーナ京都 19:15'},
-  {d:'2027-01-24',h:false,op:'佐賀バルーナーズ',venue:'SAGAアリーナ 14:05'},
-  {d:'2027-01-27',h:true,op:'滋賀レイクス',venue:'ブレックスアリーナ宇都宮 19:05'},
-  {d:'2027-01-30',h:false,op:'川崎ブレイブサンダース',venue:'東急ドレッセとどろきアリーナ 15:05'},
-  {d:'2027-01-31',h:false,op:'川崎ブレイブサンダース',venue:'東急ドレッセとどろきアリーナ 15:05'},
-  {d:'2027-02-03',h:false,op:'名古屋ダイヤモンドドルフィンズ',venue:'IGアリーナ'},
-  {d:'2027-02-06',h:true,op:'仙台89ERS',venue:'ブレックスアリーナ宇都宮 15:05'},
-  {d:'2027-02-07',h:true,op:'仙台89ERS',venue:'ブレックスアリーナ宇都宮 15:05'},
-  {d:'2027-02-11',h:true,op:'三遠ネオフェニックス',venue:'ブレックスアリーナ宇都宮 15:05'},
-  {d:'2027-02-13',h:false,op:'滋賀レイクス',venue:'滋賀ダイハツアリーナ 14:05'},
-  {d:'2027-02-16',h:false,op:'広島ドラゴンフライズ',venue:'広島グリーンアリーナ 19:05'},
-  {d:'2027-03-05',h:true,op:'千葉ジェッツ',venue:'日環アリーナ栃木 15:05'},
-  {d:'2027-03-07',h:true,op:'千葉ジェッツ',venue:'日環アリーナ栃木 15:05'},
-  {d:'2027-03-10',h:false,op:'シーホース三河',venue:'スカイホール豊田 19:05'},
-  {d:'2027-03-12',h:false,op:'群馬クレインサンダーズ',venue:'オープンハウスアリーナ太田 19:05'},
-  {d:'2027-03-14',h:false,op:'群馬クレインサンダーズ',venue:'オープンハウスアリーナ太田 15:05'},
-  {d:'2027-03-17',h:true,op:'富山グラウジーズ',venue:'ブレックスアリーナ宇都宮 19:05'},
-  {d:'2027-03-20',h:true,op:'茨城ロボッツ',venue:'ブレックスアリーナ宇都宮 15:05'},
-  {d:'2027-03-21',h:true,op:'茨城ロボッツ',venue:'ブレックスアリーナ宇都宮 15:05'},
-  {d:'2027-03-24',h:true,op:'長崎ヴェルカ',venue:'ブレックスアリーナ宇都宮 19:05'},
-  {d:'2027-03-31',h:false,op:'佐賀バルーナーズ',venue:'SAGAアリーナ 19:05'},
-  {d:'2027-04-03',h:true,op:'広島ドラゴンフライズ',venue:'調整中 14:05'},
-  {d:'2027-04-07',h:true,op:'アルバルク東京',venue:'調整中 19:05'},
-  {d:'2027-04-10',h:true,op:'アルティーリ千葉',venue:'調整中 14:05'},
-  {d:'2027-04-11',h:true,op:'アルティーリ千葉',venue:'調整中 14:05'},
-  {d:'2027-04-14',h:false,op:'横浜ビー・コルセアーズ',venue:'横浜BUNTAI 19:05'},
-  {d:'2027-04-21',h:false,op:'千葉ジェッツ',venue:'LaLa arena TOKYO-BAY 19:05'},
-  {d:'2027-04-24',h:false,op:'秋田ノーザンハピネッツ',venue:'CNAアリーナ☆あきた(予定)'},
-  {d:'2027-04-25',h:false,op:'秋田ノーザンハピネッツ',venue:'CNAアリーナ☆あきた(予定)'},
-  {d:'2027-04-28',h:false,op:'東京サンロッカーズ渋谷',venue:'TOYOTA ARENA TOKYO 19:05'},
-  {d:'2027-04-30',h:true,op:'長崎ヴェルカ',venue:'調整中 19:05'},
-  {d:'2027-05-02',h:false,op:'アルティーリ千葉',venue:'千葉ポートアリーナ 14:05'},
-];
-const CEREZO=[
-  {d:'2026-08-08',h:true,op:'ファジアーノ岡山',venue:'YANMAR HANASAKA STADIUM 19:00'},
-  {d:'2026-08-15',h:false,op:'アビスパ福岡',venue:'ベスト電器スタジアム 19:00'},
-  {d:'2026-08-22',h:true,op:'清水エスパルス',venue:'YANMAR HANASAKA STADIUM 19:00'},
-  {d:'2026-08-29',h:false,op:'ヴィッセル神戸',venue:'ノエビアスタジアム神戸 19:00'},
-  {d:'2026-09-02',h:true,op:'柏レイソル',venue:'YANMAR HANASAKA STADIUM 19:00'},
-  {d:'2026-09-06',h:true,op:'東京ヴェルディ',venue:'YANMAR HANASAKA STADIUM 19:00'},
-  {d:'2026-09-12',h:false,op:'サンフレッチェ広島',venue:'エディオンピースウイング広島 19:00'},
-  {d:'2026-09-19',h:false,op:'V・ファーレン長崎',venue:'PEACE STADIUM Connected by SoftBank 18:30'},
-  {d:'2026-09-29',h:false,op:'[レノファ山口FC vs 藤枝MYFC]の勝者',venue:'ルヴァン2回戦（アウェイ予定）',cup:'ルヴァンカップ 2回戦'},
-  {d:'2026-10-10',h:true,op:'横浜F・マリノス',venue:'YANMAR HANASAKA STADIUM 14:00'},
-  {d:'2026-10-14',h:null,op:'未定（仮）',venue:'ルヴァン3回戦',cup:'ルヴァンカップ 3回戦（仮）'},
-  {d:'2026-10-17',h:true,op:'川崎フロンターレ',venue:'YANMAR HANASAKA STADIUM 15:00'},
-  {d:'2026-10-21',h:false,op:'名古屋グランパス',venue:'豊田スタジアム 19:00'},
-  {d:'2026-10-25',h:true,op:'ジェフユナイテッド千葉',venue:'YANMAR HANASAKA STADIUM 15:00'},
-  {d:'2026-10-28',h:null,op:'未定（仮）',venue:'ルヴァン4回戦',cup:'ルヴァンカップ 4回戦（仮）'},
-  {d:'2026-10-31',h:false,op:'鹿島アントラーズ',venue:'メルカリスタジアム 15:00'},
-  {d:'2026-11-08',h:false,op:'ガンバ大阪',venue:'パナソニック スタジアム 吹田 15:00'},
-  {d:'2026-11-11',h:null,op:'未定（仮）',venue:'ルヴァン準々決勝 第1戦',cup:'ルヴァンカップ 準々決勝 第1戦（仮）'},
-  {d:'2026-11-15',h:null,op:'未定（仮）',venue:'ルヴァン準々決勝 第2戦',cup:'ルヴァンカップ 準々決勝 第2戦（仮）'},
-  {d:'2026-11-21',h:true,op:'FC東京',venue:'YANMAR HANASAKA STADIUM 15:00'},
-  {d:'2026-11-25',h:false,op:'浦和レッズ',venue:'埼玉スタジアム2002 19:30'},
-  {d:'2026-11-28',h:false,op:'京都サンガF.C.',venue:'サンガスタジアム by KYOCERA'},
-  {d:'2026-12-05',h:true,op:'水戸ホーリーホック',venue:'YANMAR HANASAKA STADIUM 15:00'},
-  {d:'2026-12-12',h:true,op:'FC町田ゼルビア',venue:'YANMAR HANASAKA STADIUM 14:00'},
-  {d:'2026-12-19',h:false,op:'ジェフユナイテッド千葉',venue:'フクダ電子アリーナ 13:00'},
-  {d:'2027-02-13',h:true,op:'ガンバ大阪',venue:'YANMAR HANASAKA STADIUM'},
-  {d:'2027-02-20',h:true,op:'ヴィッセル神戸',venue:'YANMAR HANASAKA STADIUM'},
-  {d:'2027-02-27',h:false,op:'横浜F・マリノス',venue:'日産スタジアム'},
-  {d:'2027-03-06',h:true,op:'サンフレッチェ広島',venue:'YANMAR HANASAKA STADIUM'},
-  {d:'2027-03-10',h:false,op:'水戸ホーリーホック',venue:'ケーズデンキスタジアム水戸'},
-  {d:'2027-03-13',h:false,op:'FC東京',venue:'味の素スタジアム'},
-  {d:'2027-03-20',h:true,op:'京都サンガF.C.',venue:'YANMAR HANASAKA STADIUM'},
-  {d:'2027-03-24',h:null,op:'未定（仮）',venue:'ルヴァン準決勝 第1戦',cup:'ルヴァンカップ 準決勝 第1戦（仮）'},
-  {d:'2027-03-28',h:null,op:'未定（仮）',venue:'ルヴァン準決勝 第2戦',cup:'ルヴァンカップ 準決勝 第2戦（仮）'},
-  {d:'2027-04-03',h:false,op:'柏レイソル',venue:'三協フロンテア柏スタジアム'},
-  {d:'2027-04-09',h:true,op:'アビスパ福岡',venue:'YANMAR HANASAKA STADIUM'},
-  {d:'2027-04-17',h:true,op:'鹿島アントラーズ',venue:'YANMAR HANASAKA STADIUM'},
-  {d:'2027-04-24',h:false,op:'ファジアーノ岡山',venue:'JFE晴れの国スタジアム'},
-  {d:'2027-04-29',h:true,op:'V・ファーレン長崎',venue:'YANMAR HANASAKA STADIUM'},
-  {d:'2027-05-03',h:false,op:'東京ヴェルディ',venue:'味の素スタジアム'},
-  {d:'2027-05-09',h:true,op:'名古屋グランパス',venue:'YANMAR HANASAKA STADIUM'},
-  {d:'2027-05-15',h:false,op:'清水エスパルス',venue:'IAIスタジアム日本平'},
-  {d:'2027-05-22',h:false,op:'川崎フロンターレ',venue:'等々力陸上競技場'},
-  {d:'2027-05-29',h:true,op:'浦和レッズ',venue:'YANMAR HANASAKA STADIUM'},
-  {d:'2027-06-06',h:false,op:'FC町田ゼルビア',venue:'町田GIONスタジアム'},
-  // ── 天皇杯 ──
-  {d:'2026-08-26',h:true,op:'[岐阜県代表 vs 富山新庄クラブ]の勝者',venue:'YANMAR HANASAKA STADIUM 18:30',cup:'天皇杯 2回戦'},
-  {d:'2026-09-23',h:null,op:'未定（仮）',venue:'天皇杯3回戦',cup:'天皇杯 3回戦（仮）'},
-  {d:'2026-12-09',h:null,op:'未定（仮）',venue:'天皇杯ラウンド16',cup:'天皇杯 ラウンド16（仮）'},
-  {d:'2026-12-23',h:null,op:'未定（仮）',venue:'天皇杯準々決勝',cup:'天皇杯 準々決勝（仮）'},
-  {d:'2026-12-27',h:null,op:'未定（仮）',venue:'天皇杯準決勝',cup:'天皇杯 準決勝（仮）'},
-  {d:'2027-01-01',h:null,op:'未定（仮）',venue:'MUFGスタジアム（国立競技場）',cup:'天皇杯 決勝（仮）'},
-];
-const JAPAN=[
-  // ── バスケ日本代表 国際試合 ──
-  {d:'2026-08-09',h:true,op:'モンゴル',venue:'SAGAアリーナ（佐賀） 14:00',sport:'🏀 バスケ',competition:'日本生命カップ2026 佐賀大会'},
-  {d:'2026-08-10',h:true,op:'モンゴル',venue:'SAGAアリーナ（佐賀） 18:00',sport:'🏀 バスケ',competition:'日本生命カップ2026 佐賀大会'},
-  {d:'2026-08-15',h:true,op:'韓国',venue:'有明アリーナ（東京） 19:00',sport:'🏀 バスケ',competition:'買取大吉カップ2026 東京大会'},
-  {d:'2026-08-16',h:true,op:'韓国',venue:'有明アリーナ（東京） 19:05',sport:'🏀 バスケ',competition:'SoftBank CUP 2026 東京大会'},
-  {d:'2026-08-27',h:false,op:'サウジアラビア',venue:'サウジアラビア（アウェイ）',sport:'🏀 バスケ',competition:'FIBA W杯2027アジア予選 W4'},
-  {d:'2026-08-31',h:true,op:'カタール',venue:'TOYOTA ARENA TOKYO 19:10',sport:'🏀 バスケ',competition:'FIBA W杯2027アジア予選 W4'},
-  {d:'2026-09-10',h:true,op:'インドネシア',venue:'IGアリーナ（愛知） 19:00',sport:'🏀 バスケ',competition:'アジア競技大会2026 グループステージ'},
-  {d:'2026-09-11',h:true,op:'サウジアラビア',venue:'IGアリーナ（愛知） 19:00',sport:'🏀 バスケ',competition:'アジア競技大会2026 グループステージ'},
-  {d:'2026-09-13',h:true,op:'韓国',venue:'IGアリーナ（愛知） 19:00',sport:'🏀 バスケ',competition:'アジア競技大会2026 グループステージ'},
-  {d:'2026-09-16',h:true,op:'未定',venue:'IGアリーナ（愛知）',sport:'🏀 バスケ',competition:'アジア競技大会2026 準々決勝'},
-  {d:'2026-09-18',h:true,op:'未定',venue:'IGアリーナ（愛知）',sport:'🏀 バスケ',competition:'アジア競技大会2026 準決勝'},
-  {d:'2026-09-20',h:true,op:'未定',venue:'IGアリーナ（愛知）',sport:'🏀 バスケ',competition:'アジア競技大会2026 決勝・3位決定戦'},
-  {d:'2026-09-24',h:true,op:'ウルグアイ',venue:'キューアンドエースタジアムみやぎ（宮城） 19:05',sport:'⚽ サッカー',competition:'キリンチャレンジカップ2026'},
-  {d:'2026-09-28',h:true,op:'ベネズエラ',venue:'エディオンピースウイング広島（広島）',sport:'⚽ サッカー',competition:'キリンチャレンジカップ2026'},
-  {d:'2026-10-01',h:true,op:'エクアドル',venue:'横浜国際総合競技場（神奈川） 19:10',sport:'⚽ サッカー',competition:'キリンカップサッカー2026'},
-  {d:'2026-10-05',h:true,op:'未定',venue:'国立競技場（東京） 19:00〜19:30',sport:'⚽ サッカー',competition:'キリンカップサッカー2026'},
-  {d:'2026-11-26',h:false,op:'レバノン',venue:'レバノン（アウェイ）',sport:'🏀 バスケ',competition:'FIBA W杯2027アジア予選 W5'},
-  {d:'2026-11-29',h:true,op:'カタール',venue:'未定（ホーム）',sport:'🏀 バスケ',competition:'FIBA W杯2027アジア予選 W5'},
-  {d:'2027-02-26',h:false,op:'サウジアラビア',venue:'サウジアラビア（アウェイ）',sport:'🏀 バスケ',competition:'FIBA W杯2027アジア予選 W6'},
-  {d:'2027-03-01',h:true,op:'レバノン',venue:'未定（ホーム）',sport:'🏀 バスケ',competition:'FIBA W杯2027アジア予選 W6'},
-];
-
 // ── 状態 ──
 const DOW=['月','火','水','木','金','土','日'];
 const ML=['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-let marks={}, memos={}, customGames=[];
+let marks={}, memos={}, customGames=[], scores={};
 let showBrex=true,showCerezo=true,showJapanBasket=true,showJapanSoccer=true;
 let mf='all', curView='cal', layout='vert';
 let curY=2026, curM=8;
 let popupTarget=null;
 let saveTimer=null;
-let addSport='basket', addMarkVal=null;
+let addSport='basket', addMarkVal=[];
 const isMobile=()=>window.innerWidth<=600;
 
 // ── 初期化：Firebaseより先にカレンダーを即描画 ──
@@ -702,6 +561,10 @@ onSnapshot(DOC_REF,(snap)=>{
   setSyncStatus('接続エラー ⚠','err');
   renderCurrent(); // エラー時もカレンダーは表示する
 });
+onSnapshot(SCORES_REF,(snap)=>{
+  scores=(snap.exists()&&snap.data().results)||{};
+  renderCurrent();
+},()=>{});
 async function saveToFirebase(){
   try{setSyncStatus('保存中...','loading');await setDoc(DOC_REF,{marks,memos,customGames,updatedAt:new Date().toISOString()});setSyncStatus('保存しました ✓','ok');}
   catch(e){setSyncStatus('保存失敗 ⚠','err');}
@@ -710,23 +573,38 @@ function debouncedSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveToFire
 
 // ── マーク・メモ ──
 function mk(t,d,i){return t+'_'+d+'_'+i;}
-function getMark(t,d,i){return marks[mk(t,d,i)]||null;}
+function getMark(t,d,i){const v=marks[mk(t,d,i)];if(!v)return[];return Array.isArray(v)?v:[v];}
 function getMemo(t,d,i){return memos[mk(t,d,i)]||'';}
 function badgeLbl(m){return m==='go'?'行く':m==='maybe'?'△':'¥';}
 function bdgCls(m){return m==='go'?'bdg-go':m==='maybe'?'bdg-maybe':'bdg-price';}
 
+// ── スコア（自動取得・試合終了分のみ） ──
+function scoreTeamKey(ev){
+  if(ev.team==='brex')return 'brex';
+  if(ev.team==='cerezo')return 'cerezo';
+  if(ev.team==='japan')return ev.sport==='⚽ サッカー'?'japan_soccer':'japan_basket';
+  return null;
+}
+function getScore(ev){
+  const tk=scoreTeamKey(ev);
+  if(!tk)return null;
+  return scores[tk+'_'+ev.d]||null;
+}
+function scoreText(s){return s.result==='win'?`○${s.myScore}-${s.opScore}`:s.result==='lose'?`●${s.myScore}-${s.opScore}`:`△${s.myScore}-${s.opScore}`;}
+function scoreCls(s){return s.result==='win'?'win':s.result==='lose'?'lose':'draw';}
+
 // ── イベント一覧 ──
 function allEvs(){
   const evs=[];
-  if(showBrex) BREX.forEach((e,i)=>{const mv=getMark('brex',e.d,i);if(mf==='all'||mv===mf)evs.push({...e,team:'brex',idx:i,mv});});
-  if(showCerezo) CEREZO.forEach((e,i)=>{const mv=getMark('cerezo',e.d,i);if(mf==='all'||mv===mf)evs.push({...e,team:'cerezo',idx:i,mv});});
+  if(showBrex) BREX.forEach((e,i)=>{const mv=getMark('brex',e.d,i);if(mf==='all'||mv.includes(mf))evs.push({...e,team:'brex',idx:i,mv});});
+  if(showCerezo) CEREZO.forEach((e,i)=>{const mv=getMark('cerezo',e.d,i);if(mf==='all'||mv.includes(mf))evs.push({...e,team:'cerezo',idx:i,mv});});
   JAPAN.forEach((e,i)=>{
     const show=e.sport==='⚽ サッカー'?showJapanSoccer:showJapanBasket;
     if(!show)return;
     const mv=getMark('japan',e.d,i);
-    if(mf==='all'||mv===mf)evs.push({...e,team:'japan',idx:i,mv});
+    if(mf==='all'||mv.includes(mf))evs.push({...e,team:'japan',idx:i,mv});
   });
-  customGames.forEach((e,i)=>{const mv=getMark('custom',e.d,i);if(mf==='all'||mv===mf)evs.push({...e,team:'custom',idx:i,mv,isCustom:true});});
+  customGames.forEach((e,i)=>{const mv=getMark('custom',e.d,i);if(mf==='all'||mv.includes(mf))evs.push({...e,team:'custom',idx:i,mv,isCustom:true});});
   return evs;
 }
 
@@ -910,7 +788,7 @@ function makeCell(y,m,d,other){
   const td=new Date();
   const isToday=y===td.getFullYear()&&m===td.getMonth()+1&&d===td.getDate();
   cell.className='day-cell'+(other?' other-month':'')+(isToday?' today':'');
-  if(!other){const de=allEvs().filter(e=>e.d===ds);if(de.some(e=>e.mv==='go'))cell.classList.add('marked-go');else if(de.some(e=>e.mv==='maybe'))cell.classList.add('marked-maybe');}
+  if(!other){const de=allEvs().filter(e=>e.d===ds);if(de.some(e=>e.mv.includes('go')))cell.classList.add('marked-go');else if(de.some(e=>e.mv.includes('maybe')))cell.classList.add('marked-maybe');}
   const num=document.createElement('div');num.className='day-num'+(dow===0?' sun':dow===6?' sat':'');num.textContent=d;cell.appendChild(num);
   allEvs().filter(e=>e.d===ds).forEach(ev=>{
     const tag=document.createElement('div');
@@ -932,7 +810,9 @@ function makeCell(y,m,d,other){
       lbl.textContent=evLabelPC(ev);
     }
     tag.appendChild(lbl);
-    if(ev.mv){const b=document.createElement('span');b.className='badge '+bdgCls(ev.mv);b.textContent=badgeLbl(ev.mv);tag.appendChild(b);}
+    ev.mv.forEach(v=>{const b=document.createElement('span');b.className='badge '+bdgCls(v);b.textContent=badgeLbl(v);tag.appendChild(b);});
+    const sc=getScore(ev);
+    if(sc){const sb=document.createElement('span');sb.className='badge-score bdg-'+scoreCls(sc);sb.textContent=scoreText(sc);tag.appendChild(sb);}
     // 📝バッジはPCのみ表示
     if(!isMobile()&&getMemo(ev.team,ds,ev.idx)){const m2=document.createElement('span');m2.className='badge';m2.style.cssText='background:#f0e6ff;color:#7c3aed';m2.textContent='📝';tag.appendChild(m2);}
     const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?ev.op:(ev.cup||ev.op);
@@ -947,7 +827,7 @@ function renderList(){
   const evs=allEvs().sort((a,b)=>a.d.localeCompare(b.d));
   const sec=document.getElementById('summary-section');
   function card(title,list,color){
-    const go=list.filter(e=>e.mv==='go').length,maybe=list.filter(e=>e.mv==='maybe').length,price=list.filter(e=>e.mv==='price').length,none=list.filter(e=>!e.mv).length;
+    const go=list.filter(e=>e.mv.includes('go')).length,maybe=list.filter(e=>e.mv.includes('maybe')).length,price=list.filter(e=>e.mv.includes('price')).length,none=list.filter(e=>!e.mv.length).length;
     return `<div class="sum-card" style="${color?'border-top:4px solid '+color:''}">
       <div class="sum-card-title">${title}</div>
       <div style="display:flex;align-items:baseline;gap:4px"><span class="sum-total">${list.length}</span><span style="font-size:12px;color:#aaa">試合</span></div>
@@ -972,7 +852,7 @@ function renderList(){
   const byM={};evs.forEach(ev=>{const k=ev.d.slice(0,7);if(!byM[k])byM[k]=[];byM[k].push(ev);});
   Object.keys(byM).sort().forEach(ym=>{
     const[y,m]=ym.split('-');const mes=byM[ym];
-    const go=mes.filter(e=>e.mv==='go').length,maybe=mes.filter(e=>e.mv==='maybe').length,price=mes.filter(e=>e.mv==='price').length,none=mes.filter(e=>!e.mv).length;
+    const go=mes.filter(e=>e.mv.includes('go')).length,maybe=mes.filter(e=>e.mv.includes('maybe')).length,price=mes.filter(e=>e.mv.includes('price')).length,none=mes.filter(e=>!e.mv.length).length;
     const msec=document.createElement('div');msec.className='month-section';
     const hdr=document.createElement('div');hdr.className='month-header';
     hdr.innerHTML=`<h3>${y}年${ML[parseInt(m)]} <span style="color:#bbb;font-weight:400;font-size:12px">（${mes.length}試合）</span></h3><div class="month-counts">${go?`<span class="sum-mini s-go">✅ ${go}</span>`:''}${maybe?`<span class="sum-mini s-maybe">△ ${maybe}</span>`:''}${price?`<span class="sum-mini s-price">¥ ${price}</span>`:''}${none&&mf==='all'?`<span class="sum-mini s-none">未 ${none}</span>`:''}</div>`;
@@ -999,16 +879,18 @@ function renderList(){
       }
       else if(isCup){badgeCl='l-badge lb-cup';badgeTx='🏆 '+ev.cup;opTx=ev.op;}
       else{const isB=ev.team==='brex';badgeCl='l-badge '+(isB?(ev.h?'lb-brex':'lb-brex-a'):(ev.h?'lb-cerezo':'lb-cerezo-a'));badgeTx=(isB?'🏀 ブレックス':'⚽ セレッソ')+(isTbd?'':(ev.h?' HOME':' AWAY'));opTx='vs '+ev.op;}
-      const markHtml=ev.mv?`<span class="l-mark lm-${ev.mv}">${ev.mv==='go'?'✅ 行く':ev.mv==='maybe'?'△ できたら':'¥ 値段次第'}</span>`:`<span class="l-mark lm-none">未定</span>`;
+      const markHtml=ev.mv.length?ev.mv.map(v=>`<span class="l-mark lm-${v}">${v==='go'?'✅ 行く':v==='maybe'?'△ できたら':'¥ 値段次第'}</span>`).join(''):`<span class="l-mark lm-none">未定</span>`;
+      const sc=getScore(ev);
+      const scoreHtml=sc?`<span class="l-score ls-${scoreCls(sc)}">${scoreText(sc)}</span>`:'';
       const memo=getMemo(ev.team,ev.d,ev.idx);
       const memoHtml=memo?`<div class="l-memo">📝 ${memo.slice(0,60)}${memo.length>60?'…':''}</div>`:'';
       const row=document.createElement('div');row.className='list-row';
       const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?ev.op:(ev.cup||ev.op);
       const venueStr=ev.venue||'';
       if(layout==='hori'){
-        row.innerHTML=`<span class="l-date" style="color:${wC};display:block;margin-bottom:4px">${dateStr}</span><div style="margin-bottom:4px"><span class="${badgeCl}">${badgeTx}</span></div><div style="font-size:12px;font-weight:500;margin-bottom:2px">${opTx}</div><div style="font-size:10px;color:#bbb;margin-bottom:4px">${venueStr}</div>${markHtml}${memoHtml}`;
+        row.innerHTML=`<span class="l-date" style="color:${wC};display:block;margin-bottom:4px">${dateStr}</span><div style="margin-bottom:4px"><span class="${badgeCl}">${badgeTx}</span></div><div style="font-size:12px;font-weight:500;margin-bottom:2px">${opTx}</div><div style="font-size:10px;color:#bbb;margin-bottom:4px">${venueStr}</div>${scoreHtml}${markHtml}${memoHtml}`;
       } else {
-        row.innerHTML=`<div class="l-date" style="color:${wC}">${dateStr}</div><span class="${badgeCl}">${badgeTx}</span><div class="l-op">${opTx}</div><div class="l-venue">${venueStr}</div>${markHtml}${memoHtml}`;
+        row.innerHTML=`<div class="l-date" style="color:${wC}">${dateStr}</div><span class="${badgeCl}">${badgeTx}</span><div class="l-op">${opTx}</div><div class="l-venue">${venueStr}</div>${scoreHtml}${markHtml}${memoHtml}`;
       }
       row.addEventListener('click',e=>openPopup(e,ev.team,ev.d,ev.idx,clickOp,venueStr,ev.isCustom,ev.sport));
       rows.appendChild(row);
@@ -1039,7 +921,7 @@ function openPopup(e,team,date,idx,op,info,isCustom,sport){
     infoEl.style.display='block';
   } else infoEl.style.display='none';
   const cur=getMark(team,date,idx);
-  ['go','maybe','price'].forEach(v=>document.getElementById('mb-'+v).className='mark-btn'+(cur===v?' active-'+v:''));
+  ['go','maybe','price'].forEach(v=>document.getElementById('mb-'+v).className='mark-btn'+(cur.includes(v)?' active-'+v:''));
   document.getElementById('memo-ta').value=getMemo(team,date,idx);
   document.getElementById('memo-tag').style.opacity='0';
   document.getElementById('memo-save').className='memo-save'+(team==='cerezo'?' cerezo':team==='japan'?(sport==='⚽ サッカー'?' japan-soccer':' japan'):isCustom?' custom':'');
@@ -1064,8 +946,13 @@ window.closePopup=function(){document.getElementById('popup').classList.remove('
 document.addEventListener('click',e=>{const p=document.getElementById('popup');if(p.classList.contains('show')&&!p.contains(e.target)&&e.target!==document.getElementById('overlay'))window.closePopup();},true);
 window.setMarkAction=function(v){
   if(!popupTarget)return;const{team,date,idx}=popupTarget;
-  if(v)marks[mk(team,date,idx)]=v;else delete marks[mk(team,date,idx)];
-  debouncedSave();window.closePopup();renderCurrent();
+  const key=mk(team,date,idx);
+  if(v===null){delete marks[key];debouncedSave();window.closePopup();renderCurrent();return;}
+  let cur=getMark(team,date,idx).slice();
+  cur=cur.includes(v)?cur.filter(x=>x!==v):[...cur,v];
+  if(cur.length)marks[key]=cur;else delete marks[key];
+  ['go','maybe','price'].forEach(x=>document.getElementById('mb-'+x).className='mark-btn'+(cur.includes(x)?' active-'+x:''));
+  debouncedSave();renderCurrent();
 };
 window.saveMemo=function(){
   if(!popupTarget)return;const{team,date,idx}=popupTarget;
@@ -1087,7 +974,7 @@ window.deleteCustomGame=function(){
 
 // ── 試合追加モーダル ──
 window.openAddModal=function(){
-  addSport='basket';addMarkVal=null;
+  addSport='basket';addMarkVal=[];
   document.getElementById('sp-basket').className='sport-btn active-basket';
   document.getElementById('sp-soccer').className='sport-btn';
   ['go','maybe','price'].forEach(v=>document.getElementById('ms-'+v).className='ms-btn');
@@ -1122,8 +1009,8 @@ function updateOpponentList(){
   document.getElementById('add-opponent').innerHTML='<option value="">選択してください</option>'+document.getElementById('add-opponent').innerHTML.replace('<option value="">（なし）</option>','');
 }
 window.setAddMark=function(v){
-  addMarkVal=addMarkVal===v?null:v;
-  ['go','maybe','price'].forEach(x=>document.getElementById('ms-'+x).className='ms-btn'+(addMarkVal===x?' active-'+x:''));
+  addMarkVal=addMarkVal.includes(v)?addMarkVal.filter(x=>x!==v):[...addMarkVal,v];
+  ['go','maybe','price'].forEach(x=>document.getElementById('ms-'+x).className='ms-btn'+(addMarkVal.includes(x)?' active-'+x:''));
 };
 window.submitAddGame=function(){
   const op1=document.getElementById('add-opponent').value;
@@ -1140,7 +1027,7 @@ window.submitAddGame=function(){
   const newGame={d:date,op:opLabel,venue:addSport==='basket'?venue:venueS,sport:addSport,h:null,isCustom:true};
   customGames.push(newGame);
   const newIdx=customGames.length-1;
-  if(addMarkVal)marks[mk('custom',date,newIdx)]=addMarkVal;
+  if(addMarkVal.length)marks[mk('custom',date,newIdx)]=addMarkVal;
   if(memo)memos[mk('custom',date,newIdx)]=memo;
   debouncedSave();
   window.closeAddModal();

@@ -75,6 +75,11 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 .day-cell.today{border-color:#E83D7A;border-width:2px}
 .day-cell.marked-go{border:3px solid #22c55e;box-shadow:0 0 0 1px #22c55e33}
 .day-cell.marked-maybe{border:3px solid #f59e0b;box-shadow:0 0 0 1px #f59e0b33}
+.day-cell.marked-price{border:3px solid #a78bfa;box-shadow:0 0 0 1px #a78bfa33}
+.day-cell.marked-go.marked-maybe{border:3px solid #22c55e;box-shadow:0 0 0 3px #f59e0b}
+.day-cell.marked-go.marked-price{border:3px solid #22c55e;box-shadow:0 0 0 3px #a78bfa}
+.day-cell.marked-maybe.marked-price{border:3px solid #f59e0b;box-shadow:0 0 0 3px #a78bfa}
+.day-cell.marked-go.marked-maybe.marked-price{border:3px solid #22c55e;box-shadow:0 0 0 3px #f59e0b,0 0 0 6px #a78bfa}
 .day-num{font-size:10px;font-weight:600;color:#aaa;margin-bottom:2px}
 .day-num.sat{color:#002B5C}.day-num.sun{color:#E83D7A}
 .day-num.holiday{color:#e03}
@@ -812,9 +817,13 @@ function makeCell(y,m,d,other){
   const td=new Date();
   const isToday=y===td.getFullYear()&&m===td.getMonth()+1&&d===td.getDate();
   cell.className='day-cell'+(other?' other-month':'')+(isToday?' today':'');
-  if(!other){const de=allEvs().filter(e=>e.d===ds);if(de.some(e=>e.mv.includes('go')))cell.classList.add('marked-go');else if(de.some(e=>e.mv.includes('maybe')))cell.classList.add('marked-maybe');}
+  const de=allEvs().filter(e=>e.d===ds);
+  if(!other){
+    const allMv=new Set(de.flatMap(e=>e.mv));
+    ['go','maybe','price'].forEach(v=>{if(allMv.has(v))cell.classList.add('marked-'+v);});
+  }
   const num=document.createElement('div');num.className='day-num'+(dow===0?' sun':dow===6?' sat':'')+(isHoliday(ds)?' holiday':'');num.textContent=d;cell.appendChild(num);
-  allEvs().filter(e=>e.d===ds).forEach(ev=>{
+  de.forEach(ev=>{
     const tag=document.createElement('div');
     const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.team==='custom'||!!ev.isCustom,isTbd=ev.h===null||ev.h===undefined;
     let cls='event ';
@@ -834,7 +843,7 @@ function makeCell(y,m,d,other){
       lbl.innerHTML=evLabelPC(ev);
     }
     tag.appendChild(lbl);
-    ev.mv.forEach(v=>tag.classList.add('mk-'+v));
+    if(other||de.length>1) ev.mv.forEach(v=>tag.classList.add('mk-'+v));
     const sc=getScore(ev);
     if(sc){const sb=document.createElement('span');sb.className='badge-score bdg-'+scoreCls(sc);sb.textContent=scoreText(sc);tag.appendChild(sb);}
     // メモバッジはPCのみ表示

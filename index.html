@@ -15,8 +15,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:'Helvetica Neue',Arial,'Hiragino Sans',sans-serif;background:#fff;color:#222;min-height:100vh;padding:12px 16px}
 .wrap{max-width:100%;margin:0 auto}
-h1{font-size:15px;font-weight:700;margin-bottom:10px;line-height:1.5;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
+svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px}
 
 /* sync bar - 全デバイスで非表示 */
 .sync-bar{display:none!important}
@@ -32,7 +31,7 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .toolbar-left{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .toolbar-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .15s;user-select:none;flex-shrink:0}
-.chip-logo{width:16px;height:16px;object-fit:contain;border-radius:50%;background:#fff;flex-shrink:0}
+.chip-logo{width:16px;height:16px;object-fit:contain;border-radius:5px;background:#fff;flex-shrink:0}
 .chip.brex{background:#002B5C;color:#fff;border-color:#002B5C}
 .chip.brex.off{background:transparent;color:#002B5C;border-color:#002B5C}
 .chip.cerezo{background:#E83D7A;color:#fff;border-color:#E83D7A}
@@ -58,6 +57,7 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .toolbar-right{display:flex;align-items:center;gap:6px;justify-content:space-between}
 .view-toggle-btn{width:34px;height:34px;border-radius:10px;border:1.5px solid #ddd;background:#f5f5f5;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;font-size:16px}
 .view-toggle-btn:hover{background:#eee}
+.view-toggle-btn svg.ic{margin-right:0}
 .layout-toggle{display:flex;border:1.5px solid #ddd;border-radius:8px;overflow:hidden;background:#f5f5f5}
 .layout-btn{padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;background:transparent;border:none;color:#888}
 .layout-btn.active{background:#555;color:#fff}
@@ -258,8 +258,6 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 </head>
 <body>
 <div class="wrap">
-  <h1>🏀<span class="b">宇都宮ブレックス</span> &amp; ⚽<span class="c">セレッソ大阪</span> &amp; 🇯🇵日本代表 2026-27</h1>
-
   <!-- sync bar (mobile only) -->
   <div class="sync-bar">
     <span>☁️ クラウド同期</span>
@@ -275,7 +273,7 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
       <div class="chip neutral" onclick="setAll()">すべて</div>
       <div style="width:1px;height:24px;background:#e0e0e0;margin:0 2px"></div>
       <div class="mf-btn all active" id="mf-all" onclick="setMF('all')">すべて</div>
-      <div class="mf-btn go" id="mf-go" onclick="setMF('go')">✅ 行く</div>
+      <div class="mf-btn go" id="mf-go" onclick="setMF('go')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.8 2.8L16.3 9"/></svg> 行く</div>
       <div class="mf-btn maybe" id="mf-maybe" onclick="setMF('maybe')">△ できたら</div>
       <div class="mf-btn price" id="mf-price" onclick="setMF('price')">¥ 値段次第</div>
     </div>
@@ -289,7 +287,7 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
     </div>
     <div class="toolbar-row mark-row" style="display:none" id="mob-mark-row">
       <div class="mf-btn all active" id="mob-mf-all" onclick="setMF('all')">すべて</div>
-      <div class="mf-btn go" id="mob-mf-go" onclick="setMF('go')">✅ 行く</div>
+      <div class="mf-btn go" id="mob-mf-go" onclick="setMF('go')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.8 2.8L16.3 9"/></svg> 行く</div>
       <div class="mf-btn maybe" id="mob-mf-maybe" onclick="setMF('maybe')">△ できたら</div>
       <div class="mf-btn price" id="mob-mf-price" onclick="setMF('price')">¥ 値段次第</div>
     </div>
@@ -300,7 +298,7 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
           <button class="layout-btn active" id="lb-vert" onclick="setLayout('vert')">≡ 縦</button>
           <button class="layout-btn" id="lb-hori" onclick="setLayout('hori')">⊞ 横</button>
         </div>
-        <button class="view-toggle-btn" id="view-toggle-btn" onclick="toggleViewMode()" title="表示を切替">📋</button>
+        <button class="view-toggle-btn" id="view-toggle-btn" onclick="toggleViewMode()" title="表示を切替"><svg class="ic" style="width:16px;height:16px;margin-right:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></button>
       </div>
     </div>
   </div>
@@ -322,8 +320,8 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
       <div class="leg-item"><div class="leg-dot" style="background:#E83D7A"></div>セレッソH</div>
       <div class="leg-item"><div class="leg-dot" style="border:1.5px solid #E83D7A"></div>セレッソA</div>
       <div class="leg-item"><div class="leg-dot" style="background:#7c3aed"></div>ルヴァン</div>
-      <div class="leg-item"><div class="leg-dot" style="background:#CC0000"></div>🏀🇯🇵代表</div>
-      <div class="leg-item"><div class="leg-dot" style="background:#001E55"></div>⚽🇯🇵代表</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#CC0000"></div><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6c2.6 3 2.6 9.8 12.8 12.8M18.4 5.6c-2.6 3-2.6 9.8-12.8 12.8"/></svg>日本代表</div>
+      <div class="leg-item"><div class="leg-dot" style="background:#001E55"></div><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.2l3.4 2.5-1.3 4h-4.2l-1.3-4z"/><path d="M12 3v4.2M6.3 8.3L3.4 7M17.7 8.3l2.9-1.3M8.6 16.7L6 20M15.4 16.7L18 20"/></svg>日本代表</div>
     </div>
   </div>
 
@@ -341,21 +339,21 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
   <div class="popup-team" id="popup-team"></div>
   <div class="popup-info" id="popup-info"></div>
   <div class="mark-row">
-    <div class="mark-btn" id="mb-go" onclick="setMarkAction('go')">✅ 行く</div>
+    <div class="mark-btn" id="mb-go" onclick="setMarkAction('go')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.8 2.8L16.3 9"/></svg> 行く</div>
     <div class="mark-btn" id="mb-maybe" onclick="setMarkAction('maybe')">△ できたら</div>
     <div class="mark-btn" id="mb-price" onclick="setMarkAction('price')">¥ 値段次第</div>
     <div class="mark-btn clear" onclick="setMarkAction(null)">✕ マークを消す</div>
   </div>
   <div class="memo-sec">
-    <div class="memo-lbl">📝 メモ <span class="memo-tag" id="memo-tag">保存しました ✓</span></div>
+    <div class="memo-lbl"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/><path d="M14 7l3 3"/></svg> メモ <span class="memo-tag" id="memo-tag">保存しました ✓</span></div>
     <textarea class="memo-ta" id="memo-ta" placeholder="席、一緒に行く人、持ち物など…"></textarea>
     <div class="memo-row">
-      <button class="memo-save" id="memo-save" onclick="saveMemo()">💾 メモを保存</button>
+      <button class="memo-save" id="memo-save" onclick="saveMemo()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M8.5 10.5L12 14l3.5-3.5"/><path d="M5 15v3a2 2 0 002 2h10a2 2 0 002-2v-3"/></svg> メモを保存</button>
       <button class="memo-clr" onclick="clearMemo()">消す</button>
     </div>
   </div>
   <button class="popup-close" onclick="closePopup()">閉じる</button>
-  <button class="popup-delete" id="popup-delete" onclick="deleteCustomGame()" style="display:none">🗑 この試合を削除</button>
+  <button class="popup-delete" id="popup-delete" onclick="deleteCustomGame()" style="display:none"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4.8A1 1 0 0110 4h4a1 1 0 011 1V7M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12"/></svg> この試合を削除</button>
 </div>
 
 <!-- 試合追加モーダル -->
@@ -367,8 +365,8 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
     <div class="form-group">
       <div class="form-label">スポーツ</div>
       <div class="form-row">
-        <div class="sport-btn active-basket" id="sp-basket" onclick="setSport('basket')">🏀 バスケ</div>
-        <div class="sport-btn" id="sp-soccer" onclick="setSport('soccer')">⚽ サッカー</div>
+        <div class="sport-btn active-basket" id="sp-basket" onclick="setSport('basket')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6c2.6 3 2.6 9.8 12.8 12.8M18.4 5.6c-2.6 3-2.6 9.8-12.8 12.8"/></svg> バスケ</div>
+        <div class="sport-btn" id="sp-soccer" onclick="setSport('soccer')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.2l3.4 2.5-1.3 4h-4.2l-1.3-4z"/><path d="M12 3v4.2M6.3 8.3L3.4 7M17.7 8.3l2.9-1.3M8.6 16.7L6 20M15.4 16.7L18 20"/></svg> サッカー</div>
       </div>
     </div>
     <!-- 対戦相手（2チーム） -->
@@ -394,7 +392,7 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
     <div class="form-group">
       <div class="form-label">観戦予定</div>
       <div class="mark-select">
-        <div class="ms-btn" id="ms-go" onclick="setAddMark('go')">✅ 行く</div>
+        <div class="ms-btn" id="ms-go" onclick="setAddMark('go')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.8 2.8L16.3 9"/></svg> 行く</div>
         <div class="ms-btn" id="ms-maybe" onclick="setAddMark('maybe')">△ できたら</div>
         <div class="ms-btn" id="ms-price" onclick="setAddMark('price')">¥ 値段次第</div>
       </div>
@@ -426,6 +424,26 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const DOC_REF = doc(db, 'calendar', 'user_data');
 const SCORES_REF = doc(db, 'calendar', 'scores');
+
+// ── アイコン（絵文字の代わりの線画SVG） ──
+const ICO_PATHS={
+  basket:'<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6c2.6 3 2.6 9.8 12.8 12.8M18.4 5.6c-2.6 3-2.6 9.8-12.8 12.8"/>',
+  soccer:'<circle cx="12" cy="12" r="9"/><path d="M12 7.2l3.4 2.5-1.3 4h-4.2l-1.3-4z"/><path d="M12 3v4.2M6.3 8.3L3.4 7M17.7 8.3l2.9-1.3M8.6 16.7L6 20M15.4 16.7L18 20"/>',
+  check:'<circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.8 2.8L16.3 9"/>',
+  note:'<path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/><path d="M14 7l3 3"/>',
+  save:'<path d="M12 3v11M8.5 10.5L12 14l3.5-3.5"/><path d="M5 15v3a2 2 0 002 2h10a2 2 0 002-2v-3"/>',
+  trash:'<path d="M4 7h16M9 7V4.8A1 1 0 0110 4h4a1 1 0 011 1V7M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12"/>',
+  list:'<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
+  calendar:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/>',
+  trophy:'<path d="M7 4h10v4a5 5 0 01-10 0z"/><path d="M7 5H4.5a2.5 2.5 0 002.5 2.5M17 5h2.5A2.5 2.5 0 0117 7.5M12 13v3.5m-2.5 3.5h5m-2.5 0v-3.5"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3.2 2"/>',
+  pin:'<path d="M12 21s6.5-6 6.5-11A6.5 6.5 0 105.5 10c0 5 6.5 11 6.5 11z"/><circle cx="12" cy="10" r="2.2"/>',
+  chart:'<path d="M5 19V11M12 19V5M19 19v-8"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+};
+function ic(name,size){
+  return `<svg class="ic" style="width:${size||13}px;height:${size||13}px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICO_PATHS[name]}</svg>`;
+}
 
 // ── チームリスト ──
 const BPREMIER=[
@@ -531,10 +549,10 @@ function cupAbbr(cupName){
   for(const k of Object.keys(CUP_ABBR)){if(cupName.includes(k))return CUP_ABBR[k];}
   return cupName.slice(0,4);
 }
-// カップ戦のスポーツ絵文字判定（basketキーワードがあれば🏀）
+// カップ戦のスポーツ判定
 function cupIcon(cupName,team){
-  if(team==='brex'||cupName.includes('バスケ')||cupName.includes('Bリーグ'))return '🏀';
-  return '⚽';
+  if(team==='brex'||cupName.includes('バスケ')||cupName.includes('Bリーグ'))return 'basket';
+  return 'soccer';
 }
 
 // ── 状態 ──
@@ -593,7 +611,7 @@ function isHoliday(ds){return HOLIDAYS.has(ds);}
 function scoreTeamKey(ev){
   if(ev.team==='brex')return 'brex';
   if(ev.team==='cerezo')return 'cerezo';
-  if(ev.team==='japan')return ev.sport==='⚽ サッカー'?'japan_soccer':'japan_basket';
+  if(ev.team==='japan')return ev.sport==='soccer'?'japan_soccer':'japan_basket';
   return null;
 }
 function getScore(ev){
@@ -610,7 +628,7 @@ function allEvs(){
   if(showBrex) BREX.forEach((e,i)=>{const mv=getMark('brex',e.d,i);if(mf==='all'||mv.includes(mf))evs.push({...e,team:'brex',idx:i,mv});});
   if(showCerezo) CEREZO.forEach((e,i)=>{const mv=getMark('cerezo',e.d,i);if(mf==='all'||mv.includes(mf))evs.push({...e,team:'cerezo',idx:i,mv});});
   JAPAN.forEach((e,i)=>{
-    const show=e.sport==='⚽ サッカー'?showJapanSoccer:showJapanBasket;
+    const show=e.sport==='soccer'?showJapanSoccer:showJapanBasket;
     if(!show)return;
     const mv=getMark('japan',e.d,i);
     if(mf==='all'||mv.includes(mf))evs.push({...e,team:'japan',idx:i,mv});
@@ -652,7 +670,7 @@ window.setView=function(v){
   document.getElementById('list-view').style.display=v==='list'?'block':'none';
   document.getElementById('layout-wrap').style.display=v==='list'?'flex':'none';
   const vtb=document.getElementById('view-toggle-btn');
-  vtb.textContent=v==='cal'?'📋':'📅';
+  vtb.innerHTML=v==='cal'?ic('list',16):ic('calendar',16);
   vtb.title=v==='cal'?'リスト表示に切替':'カレンダー表示に切替';
   renderCurrent();
 };
@@ -737,12 +755,12 @@ function logoImg(name){
 function evLabelMobileHTML(ev,landscape){
   const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.team==='custom'||!!ev.isCustom;
   if(isJP){
-    const icon=ev.sport==='⚽ サッカー'?'⚽':'🏀';
+    const icon=ic(ev.sport==='soccer'?'soccer':'basket');
     if(landscape) return `<span class="ev-logo-abbr">${icon}<span class="ev-abbr"> 日本代表</span></span>`;
     return `<span class="ev-text-wrap">${icon} 日本代表</span>`;
   }
   if(isCup){
-    const icon=cupIcon(ev.cup,ev.team);
+    const icon=ic(cupIcon(ev.cup,ev.team));
     const cupName=cupAbbr(ev.cup);
     const opText=ev.op==='未定（仮）'?'（仮）':abbr(ev.op);
     if(landscape) return `<span class="ev-logo-abbr">${icon}<span class="ev-abbr"> ${cupName}</span></span>`;
@@ -751,7 +769,7 @@ function evLabelMobileHTML(ev,landscape){
   if(isCustom){
     // 2チームの場合は常に略称（ロゴ2つはスペース不足のため）
     const parts=ev.op.split(' vs ');
-    const icon=ev.sport==='basket'?'🏀':'⚽';
+    const icon=ic(ev.sport==='basket'?'basket':'soccer');
     const abbrOp=parts.map(n=>abbr(n.trim())).join('<span class="ev-vs"> - </span>');
     if(landscape) return `<span class="ev-logo-abbr">${icon}<span class="ev-abbr"> ${abbrOp}</span></span>`;
     return `<span class="ev-text-wrap">${icon} ${abbrOp}</span>`;
@@ -762,34 +780,21 @@ function evLabelMobileHTML(ev,landscape){
   if(landscape){
     // 横表示：ロゴ＋略称を横並び
     if(logoUrl) return `<span class="ev-logo-abbr" style="flex-direction:column;align-items:flex-start">${preLabel}<span style="display:flex;align-items:center;gap:2px">${logoImg(ev.op)}<span class="ev-abbr"> ${abbr(ev.op)}</span></span></span>`;
-    const icon=ev.team==='brex'?'🏀':'⚽';
+    const icon=ic(ev.team==='brex'?'basket':'soccer');
     return `<span class="ev-logo-abbr" style="flex-direction:column;align-items:flex-start">${preLabel}<span>${icon}<span class="ev-abbr"> ${abbr(ev.op)}</span></span></span>`;
   }
   // 縦表示：PSをロゴの上に（flexで縦積み）
   if(logoUrl) return `<span style="display:flex;flex-direction:column;align-items:center;width:100%">${preLabel}${logoImg(ev.op)}</span>`;
-  const icon=ev.team==='brex'?'🏀':'⚽';
+  const icon=ic(ev.team==='brex'?'basket':'soccer');
   return `<span class="ev-text-wrap">${preLabel}${icon} ${abbr(ev.op)}</span>`;
 }
 
-function evLabelMobile(ev){
-  // 後方互換のため残す（テキスト版）
-  const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.team==='custom'||!!ev.isCustom;
-  if(isJP) return (ev.sport==='⚽ サッカー'?'⚽':'🏀')+' 日本代表';
-  if(isCup) return '⚽'+cupAbbr(ev.cup)+' '+abbr(ev.op);
-  if(isCustom){
-    const icon=ev.sport==='basket'?'🏀':'⚽';
-    const abbrOp=ev.op.split(' vs ').map(n=>abbr(n.trim())).join(' - ');
-    return icon+' '+abbrOp;
-  }
-  const icon=ev.team==='brex'?'🏀':'⚽';
-  return icon+' '+abbr(ev.op);
-}
 function evLabelPC(ev){
   const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.isCustom,isTbd=ev.h===null||ev.h===undefined;
-  if(isJP){const icon=ev.sport==='⚽ サッカー'?'🇯🇵⚽':'🇯🇵🏀';return `${icon}${ev.competition}`;}
-  if(isCup){return `🏆${ev.cup}`;}
-  if(isCustom){const icon=ev.sport==='basket'?'🏀':'⚽';const hoa=isTbd?'':(ev.h?'H ':'A ');return `${icon}${hoa}${ev.op}`;}
-  const icon=ev.team==='brex'?'🏀':'⚽';
+  if(isJP){const icon=ic(ev.sport==='soccer'?'soccer':'basket');return `${icon}${ev.competition}`;}
+  if(isCup){return `${ic('trophy')}${ev.cup}`;}
+  if(isCustom){const icon=ic(ev.sport==='basket'?'basket':'soccer');const hoa=isTbd?'':(ev.h?'H ':'A ');return `${icon}${hoa}${ev.op}`;}
+  const icon=ic(ev.team==='brex'?'basket':'soccer');
   const hoa=isTbd?'':(ev.h?'H ':'A ');
   return `${icon}${hoa}${ev.op}`;
 }
@@ -809,7 +814,7 @@ function makeCell(y,m,d,other){
     let cls='event ';
     if(isCustom) cls+=(ev.sport==='basket'?'ev-custom-basket':'ev-custom-soccer')+(isTbd?'':(ev.h?'':' away'));
     else if(isJP){
-      const isSoccer=ev.sport==='⚽ サッカー';
+      const isSoccer=ev.sport==='soccer';
       cls+=(isSoccer?'ev-japan-soccer':'ev-japan')+(isTbd?'':(ev.h?'':' away'));
     }
     else if(isCup) cls+='ev-cup';
@@ -820,14 +825,14 @@ function makeCell(y,m,d,other){
       const landscape=window.innerWidth>window.innerHeight;
       lbl.innerHTML=evLabelMobileHTML(ev,landscape);
     } else {
-      lbl.textContent=evLabelPC(ev);
+      lbl.innerHTML=evLabelPC(ev);
     }
     tag.appendChild(lbl);
     ev.mv.forEach(v=>tag.classList.add('mk-'+v));
     const sc=getScore(ev);
     if(sc){const sb=document.createElement('span');sb.className='badge-score bdg-'+scoreCls(sc);sb.textContent=scoreText(sc);tag.appendChild(sb);}
-    // 📝バッジはPCのみ表示
-    if(!isMobile()&&getMemo(ev.team,ds,ev.idx)){const m2=document.createElement('span');m2.className='badge';m2.style.cssText='background:#f0e6ff;color:#7c3aed';m2.textContent='📝';tag.appendChild(m2);}
+    // メモバッジはPCのみ表示
+    if(!isMobile()&&getMemo(ev.team,ds,ev.idx)){const m2=document.createElement('span');m2.className='badge';m2.style.cssText='background:#f0e6ff;color:#7c3aed';m2.innerHTML=ic('note',10);tag.appendChild(m2);}
     const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?ev.op:(ev.cup||ev.op);
     tag.addEventListener('click',e=>{e.stopPropagation();openPopup(e,ev.team,ds,ev.idx,clickOp,ev.venue||'',ev.isCustom,ev.sport);});
     cell.appendChild(tag);
@@ -844,21 +849,21 @@ function renderList(){
     return `<div class="sum-card" style="${color?'border-top:4px solid '+color:''}">
       <div class="sum-card-title">${title}</div>
       <div style="display:flex;align-items:baseline;gap:4px"><span class="sum-total">${list.length}</span><span style="font-size:12px;color:#aaa">試合</span></div>
-      <div class="sum-breakdown">${go?`<span class="sum-mini s-go">✅ ${go}</span>`:''}${maybe?`<span class="sum-mini s-maybe">△ ${maybe}</span>`:''}${price?`<span class="sum-mini s-price">¥ ${price}</span>`:''}${none&&mf==='all'?`<span class="sum-mini s-none">未 ${none}</span>`:''}</div></div>`;
+      <div class="sum-breakdown">${go?`<span class="sum-mini s-go">${ic('check',11)} ${go}</span>`:''}${maybe?`<span class="sum-mini s-maybe">△ ${maybe}</span>`:''}${price?`<span class="sum-mini s-price">¥ ${price}</span>`:''}${none&&mf==='all'?`<span class="sum-mini s-none">未 ${none}</span>`:''}</div></div>`;
   }
-  let html=card('📊 合計',evs,'');
-  if(showBrex)html+=card('🏀 ブレックス',evs.filter(e=>e.team==='brex'),'#002B5C');
-  if(showCerezo)html+=card('⚽ セレッソ',evs.filter(e=>e.team==='cerezo'),'#E83D7A');
+  let html=card(ic('chart')+' 合計',evs,'');
+  if(showBrex)html+=card(ic('basket')+' ブレックス',evs.filter(e=>e.team==='brex'),'#002B5C');
+  if(showCerezo)html+=card(ic('soccer')+' セレッソ',evs.filter(e=>e.team==='cerezo'),'#E83D7A');
   if(showJapanBasket){
-    const jbEvs=evs.filter(e=>e.team==='japan'&&e.sport==='🏀 バスケ');
-    html+=card('🏀 日本代表',jbEvs,'#CC0000');
+    const jbEvs=evs.filter(e=>e.team==='japan'&&e.sport==='basket');
+    html+=card(ic('basket')+' 日本代表',jbEvs,'#CC0000');
   }
   if(showJapanSoccer){
-    const jsEvs=evs.filter(e=>e.team==='japan'&&e.sport==='⚽ サッカー');
-    html+=card('⚽ 日本代表',jsEvs,'#001E55');
+    const jsEvs=evs.filter(e=>e.team==='japan'&&e.sport==='soccer');
+    html+=card(ic('soccer')+' 日本代表',jsEvs,'#001E55');
   }
   const cust=evs.filter(e=>e.team==='custom');
-  if(cust.length)html+=card('➕ 追加試合',cust,'#555');
+  if(cust.length)html+=card(ic('plus')+' 追加試合',cust,'#555');
   sec.innerHTML=html;
   const body=document.getElementById('list-body');body.innerHTML='';
   if(!evs.length){body.innerHTML='<div class="empty-msg">該当なし</div>';return;}
@@ -868,7 +873,7 @@ function renderList(){
     const go=mes.filter(e=>e.mv.includes('go')).length,maybe=mes.filter(e=>e.mv.includes('maybe')).length,price=mes.filter(e=>e.mv.includes('price')).length,none=mes.filter(e=>!e.mv.length).length;
     const msec=document.createElement('div');msec.className='month-section';
     const hdr=document.createElement('div');hdr.className='month-header';
-    hdr.innerHTML=`<h3>${y}年${ML[parseInt(m)]} <span style="color:#bbb;font-weight:400;font-size:12px">（${mes.length}試合）</span></h3><div class="month-counts">${go?`<span class="sum-mini s-go">✅ ${go}</span>`:''}${maybe?`<span class="sum-mini s-maybe">△ ${maybe}</span>`:''}${price?`<span class="sum-mini s-price">¥ ${price}</span>`:''}${none&&mf==='all'?`<span class="sum-mini s-none">未 ${none}</span>`:''}</div>`;
+    hdr.innerHTML=`<h3>${y}年${ML[parseInt(m)]} <span style="color:#bbb;font-weight:400;font-size:12px">（${mes.length}試合）</span></h3><div class="month-counts">${go?`<span class="sum-mini s-go">${ic('check',11)} ${go}</span>`:''}${maybe?`<span class="sum-mini s-maybe">△ ${maybe}</span>`:''}${price?`<span class="sum-mini s-price">¥ ${price}</span>`:''}${none&&mf==='all'?`<span class="sum-mini s-none">未 ${none}</span>`:''}</div>`;
     msec.appendChild(hdr);
     const rows=document.createElement('div');rows.className='list-rows'+(layout==='hori'?' hori':'');
     mes.forEach(ev=>{
@@ -880,23 +885,23 @@ function renderList(){
       const mob=isMobile();
       if(isCustom){
         badgeCl='l-badge '+(ev.sport==='basket'?'lb-custom-b':'lb-custom-s');
-        badgeTx=(ev.sport==='basket'?'🏀':'⚽')+' 追加';
+        badgeTx=ic(ev.sport==='basket'?'basket':'soccer')+' 追加';
         // スマホはabbr略称、PCはそのまま
         const opName=mob?ev.op.split(' vs ').map(n=>abbr(n)).join(' - '):ev.op;
         opTx=opName;
       }
       if(isJP){
-        const isSoccer=ev.sport==='⚽ サッカー';
+        const isSoccer=ev.sport==='soccer';
         badgeCl='l-badge '+(isSoccer?'lb-japan-soccer':'lb-japan');
-        badgeTx=`🇯🇵 ${ev.sport}`;opTx=`${ev.competition} vs ${ev.op}`;
+        badgeTx=`${ic(isSoccer?'soccer':'basket')} ${isSoccer?'サッカー':'バスケ'}`;opTx=`${ev.competition} vs ${ev.op}`;
       }
-      else if(isCup){badgeCl='l-badge lb-cup';badgeTx='🏆 '+ev.cup;opTx=ev.op;}
-      else{const isB=ev.team==='brex';badgeCl='l-badge '+(isB?(ev.h?'lb-brex':'lb-brex-a'):(ev.h?'lb-cerezo':'lb-cerezo-a'));badgeTx=(isB?'🏀 ブレックス':'⚽ セレッソ')+(isTbd?'':(ev.h?' HOME':' AWAY'));opTx='vs '+ev.op;}
-      const markHtml=ev.mv.length?ev.mv.map(v=>`<span class="l-mark lm-${v}">${v==='go'?'✅ 行く':v==='maybe'?'△ できたら':'¥ 値段次第'}</span>`).join(''):`<span class="l-mark lm-none">未定</span>`;
+      else if(isCup){badgeCl='l-badge lb-cup';badgeTx=ic('trophy')+' '+ev.cup;opTx=ev.op;}
+      else{const isB=ev.team==='brex';badgeCl='l-badge '+(isB?(ev.h?'lb-brex':'lb-brex-a'):(ev.h?'lb-cerezo':'lb-cerezo-a'));badgeTx=(isB?ic('basket')+' ブレックス':ic('soccer')+' セレッソ')+(isTbd?'':(ev.h?' HOME':' AWAY'));opTx='vs '+ev.op;}
+      const markHtml=ev.mv.length?ev.mv.map(v=>`<span class="l-mark lm-${v}">${v==='go'?ic('check',11)+' 行く':v==='maybe'?'△ できたら':'¥ 値段次第'}</span>`).join(''):`<span class="l-mark lm-none">未定</span>`;
       const sc=getScore(ev);
       const scoreHtml=sc?`<span class="l-score ls-${scoreCls(sc)}">${scoreText(sc)}</span>`:'';
       const memo=getMemo(ev.team,ev.d,ev.idx);
-      const memoHtml=memo?`<div class="l-memo">📝 ${memo.slice(0,60)}${memo.length>60?'…':''}</div>`:'';
+      const memoHtml=memo?`<div class="l-memo">${ic('note',11)} ${memo.slice(0,60)}${memo.length>60?'…':''}</div>`:'';
       const row=document.createElement('div');row.className='list-row';
       const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?ev.op:(ev.cup||ev.op);
       const venueStr=ev.venue||'';
@@ -918,26 +923,26 @@ function openPopup(e,team,date,idx,op,info,isCustom,sport){
   const popup=document.getElementById('popup');
   const tEl=document.getElementById('popup-team');
   if(team==='japan'){
-    const isSoccer=sport==='⚽ サッカー';
-    tEl.textContent=op;
+    const isSoccer=sport==='soccer';
+    tEl.innerHTML=op;
     tEl.style.color=isSoccer?'#001E55':'#CC0000';
   }
-  else if(isCustom){tEl.textContent=(sport==='basket'?'🏀':'⚽')+' '+op;tEl.style.color='#555';}
-  else{tEl.textContent=(team==='brex'?'🏀 宇都宮ブレックス':'⚽ セレッソ大阪')+' vs '+op;tEl.style.color=team==='brex'?'#002B5C':'#E83D7A';}
+  else if(isCustom){tEl.innerHTML=(sport==='basket'?ic('basket'):ic('soccer'))+' '+op;tEl.style.color='#555';}
+  else{tEl.innerHTML=(team==='brex'?ic('basket')+' 宇都宮ブレックス':ic('soccer')+' セレッソ大阪')+' vs '+op;tEl.style.color=team==='brex'?'#002B5C':'#E83D7A';}
   // 会場・時刻
   const infoEl=document.getElementById('popup-info');
   if(info){
     const tm=info.match(/\d{1,2}:\d{2}/);
-    const isBasket=team==='brex'||(team==='japan'&&sport==='🏀 バスケ')||(isCustom&&sport==='basket');
+    const isBasket=team==='brex'||(team==='japan'&&sport==='basket')||(isCustom&&sport==='basket');
     const word=isBasket?'ティップオフ':'キックオフ';
-    infoEl.innerHTML=(tm?`🕐 <strong>${tm[0]}</strong> ${word}<br>`:'')+'📍 '+(tm?info.replace(tm[0],'').trim():info);
+    infoEl.innerHTML=(tm?`${ic('clock',12)} <strong>${tm[0]}</strong> ${word}<br>`:'')+ic('pin',12)+' '+(tm?info.replace(tm[0],'').trim():info);
     infoEl.style.display='block';
   } else infoEl.style.display='none';
   const cur=getMark(team,date,idx);
   ['go','maybe','price'].forEach(v=>document.getElementById('mb-'+v).className='mark-btn'+(cur.includes(v)?' active-'+v:''));
   document.getElementById('memo-ta').value=getMemo(team,date,idx);
   document.getElementById('memo-tag').style.opacity='0';
-  document.getElementById('memo-save').className='memo-save'+(team==='cerezo'?' cerezo':team==='japan'?(sport==='⚽ サッカー'?' japan-soccer':' japan'):isCustom?' custom':'');
+  document.getElementById('memo-save').className='memo-save'+(team==='cerezo'?' cerezo':team==='japan'?(sport==='soccer'?' japan-soccer':' japan'):isCustom?' custom':'');
   // 削除ボタン（カスタムのみ表示）
   document.getElementById('popup-delete').style.display=isCustom?'block':'none';
   popup.style.visibility='hidden';
@@ -1053,7 +1058,7 @@ document.getElementById('prev').onclick=()=>{curM--;if(curM<1){curM=12;curY--;}r
 document.getElementById('next').onclick=()=>{curM++;if(curM>12){curM=1;curY++;}renderCal();};
 // 画面回転時に再描画（縦⇔横でロゴ/略称表示を切替）
 window.addEventListener('orientationchange',()=>{setTimeout(renderCurrent,100);});
-window.addEventListener('resize',()=>{if(isMobile())renderCal();});
+window.addEventListener('resize',()=>{renderCurrent();});
 
 // ── 初期化：Firebaseの応答を待たずに即カレンダーを表示 ──
 const t2=new Date();curY=t2.getFullYear();curM=t2.getMonth()+1;

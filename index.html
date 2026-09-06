@@ -31,7 +31,8 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .toolbar{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:12px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
 .toolbar-left{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .toolbar-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.chip{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .15s;user-select:none;flex-shrink:0}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid transparent;transition:all .15s;user-select:none;flex-shrink:0}
+.chip-logo{width:16px;height:16px;object-fit:contain;border-radius:50%;background:#fff;flex-shrink:0}
 .chip.brex{background:#002B5C;color:#fff;border-color:#002B5C}
 .chip.brex.off{background:transparent;color:#002B5C;border-color:#002B5C}
 .chip.cerezo{background:#E83D7A;color:#fff;border-color:#E83D7A}
@@ -43,7 +44,9 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .chip.neutral{background:#555;color:#fff;font-size:11px}
 .chip.add-btn{background:#fff;color:#333;border-color:#ddd;font-size:11px}
 .chip.add-btn:hover{background:#f5f5f5}
-.mf-btn{padding:5px 10px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;border:2px solid transparent;user-select:none;white-space:nowrap;flex-shrink:0}
+.chip.add-btn.icon-only{width:34px;height:34px;padding:0;justify-content:center;border-radius:10px;font-size:18px;font-weight:800;background:#002B5C;color:#fff;border-color:#002B5C}
+.chip.add-btn.icon-only:hover{background:#001c3d}
+.mf-btn{padding:5px 10px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;border:2px solid transparent;user-select:none;white-space:nowrap;flex-shrink:0}
 .mf-btn.all{background:#eee;color:#555;border-color:#ddd}
 .mf-btn.all.active{background:#333;color:#fff;border-color:#333}
 .mf-btn.go{background:#dcfce7;color:#166534;border-color:#86efac}
@@ -53,9 +56,8 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .mf-btn.price{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
 .mf-btn.price.active{background:#a78bfa;color:#fff;border-color:#a78bfa}
 .toolbar-right{display:flex;align-items:center;gap:6px;justify-content:space-between}
-.view-toggle{display:flex;border:1.5px solid #ddd;border-radius:8px;overflow:hidden;background:#f5f5f5}
-.view-btn{padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;background:transparent;border:none;color:#888;white-space:nowrap}
-.view-btn.active{background:#002B5C;color:#fff}
+.view-toggle-btn{width:34px;height:34px;border-radius:10px;border:1.5px solid #ddd;background:#f5f5f5;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;font-size:16px}
+.view-toggle-btn:hover{background:#eee}
 .layout-toggle{display:flex;border:1.5px solid #ddd;border-radius:8px;overflow:hidden;background:#f5f5f5}
 .layout-btn{padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;background:transparent;border:none;color:#888}
 .layout-btn.active{background:#555;color:#fff}
@@ -75,6 +77,7 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .day-cell.marked-maybe{border:3px solid #f59e0b;box-shadow:0 0 0 1px #f59e0b33}
 .day-num{font-size:10px;font-weight:600;color:#aaa;margin-bottom:2px}
 .day-num.sat{color:#002B5C}.day-num.sun{color:#E83D7A}
+.day-num.holiday{color:#e03}
 .event{border-radius:3px;padding:2px 4px;font-size:9px;font-weight:600;margin-bottom:1px;line-height:1.3;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:1px}
 .ev-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
 .ev-brex{background:#002B5C;color:#fff}
@@ -87,9 +90,15 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 .ev-cerezo.away{background:transparent;color:#E83D7A;border:1px solid #E83D7A}
 .ev-japan.away{background:transparent;color:#CC0000;border:1px solid #CC0000}
 .ev-japan-soccer.away{background:transparent;color:#001E55;border:1px solid #001E55}
+/* 観戦予定マーク：枠線の色で表現（アウェイの枠線より太い） */
+.event.mk-go{border:2.5px solid #22c55e}
+.event.mk-maybe{border:2.5px solid #f59e0b}
+.event.mk-price{border:2.5px solid #a78bfa}
+.event.mk-go.mk-maybe{border:2.5px solid #22c55e;box-shadow:0 0 0 2.5px #f59e0b}
+.event.mk-go.mk-price{border:2.5px solid #22c55e;box-shadow:0 0 0 2.5px #a78bfa}
+.event.mk-maybe.mk-price{border:2.5px solid #f59e0b;box-shadow:0 0 0 2.5px #a78bfa}
 .ev-cup{background:#7c3aed;color:#fff}
 .badge{font-size:7px;flex-shrink:0;border-radius:2px;padding:0 2px;font-weight:700}
-.bdg-go{background:#22c55e;color:#fff}.bdg-maybe{background:#f59e0b;color:#fff}.bdg-price{background:#a78bfa;color:#fff}
 .badge-score{font-size:7px;flex-shrink:0;border-radius:2px;padding:0 2px;font-weight:700;white-space:nowrap}
 .bdg-win{background:#0ea5e9;color:#fff}.bdg-lose{background:#94a3b8;color:#fff}.bdg-draw{background:#cbd5e1;color:#333}
 /* スマホカレンダー内ロゴ */
@@ -210,11 +219,11 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
   .toolbar{flex-direction:column;align-items:stretch;padding:8px 10px;gap:6px}
   .toolbar-left{display:none}
   #mob-team-row{display:grid!important;grid-template-columns:repeat(5,1fr);gap:4px}
-  #mob-team-row .chip{padding:5px 2px;font-size:10px;justify-content:center;border-radius:14px;gap:2px}
+  #mob-team-row .chip{padding:5px 2px;font-size:10px;justify-content:center;border-radius:9px;gap:2px}
+  #mob-team-row .chip-logo{width:12px;height:12px}
   #mob-mark-row{display:grid!important;grid-template-columns:repeat(4,1fr);gap:4px}
-  #mob-mark-row .mf-btn{padding:5px 2px;font-size:10px;text-align:center;border-radius:12px}
+  #mob-mark-row .mf-btn{padding:5px 2px;font-size:10px;text-align:center;border-radius:9px}
   .toolbar-right{justify-content:space-between}
-  .view-btn{padding:5px 10px;font-size:11px}
 
   /* カレンダー横スクロール（スマホのみ有効化） */
   .cal-scroll-wrap{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -8px;padding:0 8px}
@@ -259,10 +268,10 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
 
   <div class="toolbar">
     <div class="toolbar-left">
-      <div class="chip brex" id="chip-brex" onclick="toggleTeam('brex')">🏀 ブレックス</div>
-      <div class="chip cerezo" id="chip-cerezo" onclick="toggleTeam('cerezo')">⚽ セレッソ</div>
-      <div class="chip japan" id="chip-japan" onclick="toggleTeam('japan')">🏀 日本代表</div>
-      <div class="chip japan-soccer" id="chip-japan-soccer" onclick="toggleTeam('japan-soccer')">⚽ 日本代表</div>
+      <div class="chip brex" id="chip-brex" onclick="toggleTeam('brex')"><img class="chip-logo" src="https://bleague.bl.kuroco-img.app/v=1772175996/files/user/common/img/logo/2026/m/ub.png" alt="">ブレックス</div>
+      <div class="chip cerezo" id="chip-cerezo" onclick="toggleTeam('cerezo')"><img class="chip-logo" src="https://www.cerezo.jp/logo/logo.svg" alt="">セレッソ</div>
+      <div class="chip japan" id="chip-japan" onclick="toggleTeam('japan')"><img class="chip-logo" src="assets/jba-logo.png" alt="">日本代表</div>
+      <div class="chip japan-soccer" id="chip-japan-soccer" onclick="toggleTeam('japan-soccer')"><img class="chip-logo" src="https://upload.wikimedia.org/wikipedia/en/thumb/8/84/Japan_national_football_team_crest.svg/250px-Japan_national_football_team_crest.svg.png" alt="">日本代表</div>
       <div class="chip neutral" onclick="setAll()">すべて</div>
       <div style="width:1px;height:24px;background:#e0e0e0;margin:0 2px"></div>
       <div class="mf-btn all active" id="mf-all" onclick="setMF('all')">すべて</div>
@@ -272,10 +281,10 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
     </div>
     <!-- スマホ用：2行レイアウト（PC非表示） -->
     <div class="toolbar-row team-row" style="display:none" id="mob-team-row">
-      <div class="chip brex" onclick="toggleTeam('brex')" id="mob-chip-brex">🏀 ブレックス</div>
-      <div class="chip cerezo" onclick="toggleTeam('cerezo')" id="mob-chip-cerezo">⚽ セレッソ</div>
-      <div class="chip japan" onclick="toggleTeam('japan')" id="mob-chip-japan">🏀 日本代表</div>
-      <div class="chip japan-soccer" onclick="toggleTeam('japan-soccer')" id="mob-chip-japan-soccer">⚽ 日本代表</div>
+      <div class="chip brex" onclick="toggleTeam('brex')" id="mob-chip-brex"><img class="chip-logo" src="https://bleague.bl.kuroco-img.app/v=1772175996/files/user/common/img/logo/2026/m/ub.png" alt="">ブレックス</div>
+      <div class="chip cerezo" onclick="toggleTeam('cerezo')" id="mob-chip-cerezo"><img class="chip-logo" src="https://www.cerezo.jp/logo/logo.svg" alt="">セレッソ</div>
+      <div class="chip japan" onclick="toggleTeam('japan')" id="mob-chip-japan"><img class="chip-logo" src="assets/jba-logo.png" alt="">日本代表</div>
+      <div class="chip japan-soccer" onclick="toggleTeam('japan-soccer')" id="mob-chip-japan-soccer"><img class="chip-logo" src="https://upload.wikimedia.org/wikipedia/en/thumb/8/84/Japan_national_football_team_crest.svg/250px-Japan_national_football_team_crest.svg.png" alt="">日本代表</div>
       <div class="chip neutral" onclick="setAll()">すべて</div>
     </div>
     <div class="toolbar-row mark-row" style="display:none" id="mob-mark-row">
@@ -285,16 +294,13 @@ h1 span.b{color:#002B5C}h1 span.c{color:#E83D7A}
       <div class="mf-btn price" id="mob-mf-price" onclick="setMF('price')">¥ 値段次第</div>
     </div>
     <div class="toolbar-right">
-      <div class="chip add-btn" onclick="openAddModal()">＋ 試合を追加</div>
+      <div class="chip add-btn icon-only" onclick="openAddModal()" title="試合を追加">＋</div>
       <div style="display:flex;gap:6px;align-items:center">
         <div class="layout-toggle" id="layout-wrap" style="display:none">
           <button class="layout-btn active" id="lb-vert" onclick="setLayout('vert')">≡ 縦</button>
           <button class="layout-btn" id="lb-hori" onclick="setLayout('hori')">⊞ 横</button>
         </div>
-        <div class="view-toggle">
-          <button class="view-btn active" id="vb-cal" onclick="setView('cal')">📅 カレンダー</button>
-          <button class="view-btn" id="vb-list" onclick="setView('list')">📋 リスト</button>
-        </div>
+        <button class="view-toggle-btn" id="view-toggle-btn" onclick="toggleViewMode()" title="表示を切替">📋</button>
       </div>
     </div>
   </div>
@@ -575,8 +581,13 @@ function debouncedSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveToFire
 function mk(t,d,i){return t+'_'+d+'_'+i;}
 function getMark(t,d,i){const v=marks[mk(t,d,i)];if(!v)return[];return Array.isArray(v)?v:[v];}
 function getMemo(t,d,i){return memos[mk(t,d,i)]||'';}
-function badgeLbl(m){return m==='go'?'行く':m==='maybe'?'△':'¥';}
-function bdgCls(m){return m==='go'?'bdg-go':m==='maybe'?'bdg-maybe':'bdg-price';}
+// ── 日本の祝日（2026年8月〜2027年6月） ──
+const HOLIDAYS=new Set([
+  '2026-08-11','2026-09-21','2026-09-22','2026-09-23','2026-10-12','2026-11-03','2026-11-23',
+  '2027-01-01','2027-01-11','2027-02-11','2027-02-23','2027-03-21','2027-03-22',
+  '2027-04-29','2027-05-03','2027-05-04','2027-05-05'
+]);
+function isHoliday(ds){return HOLIDAYS.has(ds);}
 
 // ── スコア（自動取得・試合終了分のみ） ──
 function scoreTeamKey(ev){
@@ -640,10 +651,12 @@ window.setView=function(v){
   document.getElementById('cal-view').style.display=v==='cal'?'block':'none';
   document.getElementById('list-view').style.display=v==='list'?'block':'none';
   document.getElementById('layout-wrap').style.display=v==='list'?'flex':'none';
-  document.getElementById('vb-cal').classList.toggle('active',v==='cal');
-  document.getElementById('vb-list').classList.toggle('active',v==='list');
+  const vtb=document.getElementById('view-toggle-btn');
+  vtb.textContent=v==='cal'?'📋':'📅';
+  vtb.title=v==='cal'?'リスト表示に切替':'カレンダー表示に切替';
   renderCurrent();
 };
+window.toggleViewMode=function(){setView(curView==='cal'?'list':'cal');};
 window.setLayout=function(l){layout=l;document.getElementById('lb-vert').classList.toggle('active',l==='vert');document.getElementById('lb-hori').classList.toggle('active',l==='hori');renderList();};
 function renderCurrent(){if(curView==='cal')renderCal();else renderList();}
 
@@ -789,7 +802,7 @@ function makeCell(y,m,d,other){
   const isToday=y===td.getFullYear()&&m===td.getMonth()+1&&d===td.getDate();
   cell.className='day-cell'+(other?' other-month':'')+(isToday?' today':'');
   if(!other){const de=allEvs().filter(e=>e.d===ds);if(de.some(e=>e.mv.includes('go')))cell.classList.add('marked-go');else if(de.some(e=>e.mv.includes('maybe')))cell.classList.add('marked-maybe');}
-  const num=document.createElement('div');num.className='day-num'+(dow===0?' sun':dow===6?' sat':'');num.textContent=d;cell.appendChild(num);
+  const num=document.createElement('div');num.className='day-num'+(dow===0?' sun':dow===6?' sat':'')+(isHoliday(ds)?' holiday':'');num.textContent=d;cell.appendChild(num);
   allEvs().filter(e=>e.d===ds).forEach(ev=>{
     const tag=document.createElement('div');
     const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.team==='custom'||!!ev.isCustom,isTbd=ev.h===null||ev.h===undefined;
@@ -810,7 +823,7 @@ function makeCell(y,m,d,other){
       lbl.textContent=evLabelPC(ev);
     }
     tag.appendChild(lbl);
-    ev.mv.forEach(v=>{const b=document.createElement('span');b.className='badge '+bdgCls(v);b.textContent=badgeLbl(v);tag.appendChild(b);});
+    ev.mv.forEach(v=>tag.classList.add('mk-'+v));
     const sc=getScore(ev);
     if(sc){const sb=document.createElement('span');sb.className='badge-score bdg-'+scoreCls(sc);sb.textContent=scoreText(sc);tag.appendChild(sb);}
     // 📝バッジはPCのみ表示
@@ -860,7 +873,7 @@ function renderList(){
     const rows=document.createElement('div');rows.className='list-rows'+(layout==='hori'?' hori':'');
     mes.forEach(ev=>{
       const dow2=DOW[new Date(ev.d+'T00:00:00').getDay()];
-      const wC=new Date(ev.d+'T00:00:00').getDay()===0?'#E83D7A':new Date(ev.d+'T00:00:00').getDay()===6?'#002B5C':'#666';
+      const wC=isHoliday(ev.d)?'#e03':new Date(ev.d+'T00:00:00').getDay()===0?'#E83D7A':new Date(ev.d+'T00:00:00').getDay()===6?'#002B5C':'#666';
       const dateStr=`${ev.d.slice(5).replace('-','/')}（${dow2}）`;
       const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.isCustom,isTbd=ev.h===null||ev.h===undefined;
       let badgeCl,badgeTx,opTx;

@@ -560,7 +560,7 @@ const DOW=['月','火','水','木','金','土','日'];
 const ML=['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 let marks={}, memos={}, customGames=[], scores={};
 let showBrex=true,showCerezo=true,showJapanBasket=true,showJapanSoccer=true;
-let mf='all', curView='cal', layout='vert';
+let mf=[], curView='cal', layout='vert';
 let curY=2026, curM=8;
 let popupTarget=null;
 let saveTimer=null;
@@ -623,17 +623,18 @@ function scoreText(s){return s.result==='win'?`○${s.myScore}-${s.opScore}`:s.r
 function scoreCls(s){return s.result==='win'?'win':s.result==='lose'?'lose':'draw';}
 
 // ── イベント一覧 ──
+function passMF(mv){return mf.length===0||mv.some(v=>mf.includes(v));}
 function allEvs(){
   const evs=[];
-  if(showBrex) BREX.forEach((e,i)=>{const mv=getMark('brex',e.d,i);if(mf==='all'||mv.includes(mf))evs.push({...e,team:'brex',idx:i,mv});});
-  if(showCerezo) CEREZO.forEach((e,i)=>{const mv=getMark('cerezo',e.d,i);if(mf==='all'||mv.includes(mf))evs.push({...e,team:'cerezo',idx:i,mv});});
+  if(showBrex) BREX.forEach((e,i)=>{const mv=getMark('brex',e.d,i);if(passMF(mv))evs.push({...e,team:'brex',idx:i,mv});});
+  if(showCerezo) CEREZO.forEach((e,i)=>{const mv=getMark('cerezo',e.d,i);if(passMF(mv))evs.push({...e,team:'cerezo',idx:i,mv});});
   JAPAN.forEach((e,i)=>{
     const show=e.sport==='soccer'?showJapanSoccer:showJapanBasket;
     if(!show)return;
     const mv=getMark('japan',e.d,i);
-    if(mf==='all'||mv.includes(mf))evs.push({...e,team:'japan',idx:i,mv});
+    if(passMF(mv))evs.push({...e,team:'japan',idx:i,mv});
   });
-  customGames.forEach((e,i)=>{const mv=getMark('custom',e.d,i);if(mf==='all'||mv.includes(mf))evs.push({...e,team:'custom',idx:i,mv,isCustom:true});});
+  customGames.forEach((e,i)=>{const mv=getMark('custom',e.d,i);if(passMF(mv))evs.push({...e,team:'custom',idx:i,mv,isCustom:true});});
   return evs;
 }
 
@@ -649,10 +650,11 @@ function syncChips(){
 }
 function syncMF(){
   ['all','go','maybe','price'].forEach(v=>{
+    const on=v==='all'?mf.length===0:mf.includes(v);
     const pc=document.getElementById('mf-'+v);
     const mob=document.getElementById('mob-mf-'+v);
-    if(pc) pc.classList.toggle('active',v===mf);
-    if(mob) mob.classList.toggle('active',v===mf);
+    if(pc) pc.classList.toggle('active',on);
+    if(mob) mob.classList.toggle('active',on);
   });
 }
 window.toggleTeam=function(t){
@@ -663,7 +665,11 @@ window.toggleTeam=function(t){
   syncChips();renderCurrent();
 };
 window.setAll=function(){showBrex=true;showCerezo=true;showJapanBasket=true;showJapanSoccer=true;syncChips();renderCurrent();};
-window.setMF=function(f){mf=f;syncMF();renderCurrent();};
+window.setMF=function(f){
+  if(f==='all')mf=[];
+  else mf=mf.includes(f)?mf.filter(x=>x!==f):[...mf,f];
+  syncMF();renderCurrent();
+};
 window.setView=function(v){
   curView=v;
   document.getElementById('cal-view').style.display=v==='cal'?'block':'none';
@@ -849,7 +855,7 @@ function renderList(){
     return `<div class="sum-card" style="${color?'border-top:4px solid '+color:''}">
       <div class="sum-card-title">${title}</div>
       <div style="display:flex;align-items:baseline;gap:4px"><span class="sum-total">${list.length}</span><span style="font-size:12px;color:#aaa">試合</span></div>
-      <div class="sum-breakdown">${go?`<span class="sum-mini s-go">${ic('check',11)} ${go}</span>`:''}${maybe?`<span class="sum-mini s-maybe">△ ${maybe}</span>`:''}${price?`<span class="sum-mini s-price">¥ ${price}</span>`:''}${none&&mf==='all'?`<span class="sum-mini s-none">未 ${none}</span>`:''}</div></div>`;
+      <div class="sum-breakdown">${go?`<span class="sum-mini s-go">${ic('check',11)} ${go}</span>`:''}${maybe?`<span class="sum-mini s-maybe">△ ${maybe}</span>`:''}${price?`<span class="sum-mini s-price">¥ ${price}</span>`:''}${none&&mf.length===0?`<span class="sum-mini s-none">未 ${none}</span>`:''}</div></div>`;
   }
   let html=card(ic('chart')+' 合計',evs,'');
   if(showBrex)html+=card(ic('basket')+' ブレックス',evs.filter(e=>e.team==='brex'),'#002B5C');
@@ -873,7 +879,7 @@ function renderList(){
     const go=mes.filter(e=>e.mv.includes('go')).length,maybe=mes.filter(e=>e.mv.includes('maybe')).length,price=mes.filter(e=>e.mv.includes('price')).length,none=mes.filter(e=>!e.mv.length).length;
     const msec=document.createElement('div');msec.className='month-section';
     const hdr=document.createElement('div');hdr.className='month-header';
-    hdr.innerHTML=`<h3>${y}年${ML[parseInt(m)]} <span style="color:#bbb;font-weight:400;font-size:12px">（${mes.length}試合）</span></h3><div class="month-counts">${go?`<span class="sum-mini s-go">${ic('check',11)} ${go}</span>`:''}${maybe?`<span class="sum-mini s-maybe">△ ${maybe}</span>`:''}${price?`<span class="sum-mini s-price">¥ ${price}</span>`:''}${none&&mf==='all'?`<span class="sum-mini s-none">未 ${none}</span>`:''}</div>`;
+    hdr.innerHTML=`<h3>${y}年${ML[parseInt(m)]} <span style="color:#bbb;font-weight:400;font-size:12px">（${mes.length}試合）</span></h3><div class="month-counts">${go?`<span class="sum-mini s-go">${ic('check',11)} ${go}</span>`:''}${maybe?`<span class="sum-mini s-maybe">△ ${maybe}</span>`:''}${price?`<span class="sum-mini s-price">¥ ${price}</span>`:''}${none&&mf.length===0?`<span class="sum-mini s-none">未 ${none}</span>`:''}</div>`;
     msec.appendChild(hdr);
     const rows=document.createElement('div');rows.className='list-rows'+(layout==='hori'?' hori':'');
     mes.forEach(ev=>{

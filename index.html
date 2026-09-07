@@ -921,7 +921,7 @@ function renderList(){
         const opName=mob?ev.op.split(' vs ').map(n=>abbr(n)).join(' - '):ev.op;
         opTx=opName;
       }
-      if(isJP){
+      else if(isJP){
         const isSoccer=ev.sport==='soccer';
         badgeCl='l-badge '+(isSoccer?'lb-japan-soccer':'lb-japan');
         badgeTx=`${ic(isSoccer?'soccer':'basket')} ${isSoccer?'サッカー':'バスケ'}`;opTx=`${ev.competition} vs ${ev.op}`;

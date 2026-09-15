@@ -41,6 +41,8 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 .chip.japan.off{background:transparent;color:#CC0000;border-color:#CC0000}
 .chip.japan-soccer{background:#001E55;color:#fff;border-color:#001E55}
 .chip.japan-soccer.off{background:transparent;color:#001E55;border-color:#001E55}
+.chip.custom{background:#555;color:#fff;border-color:#555}
+.chip.custom.off{background:transparent;color:#555;border-color:#555}
 .chip.neutral{background:#f5f5f7;color:#1d1d1f;font-size:11px;padding:6px 12px}
 .chip.add-btn{background:#fff;color:#333;border-color:#ddd;font-size:11px}
 .chip.add-btn:hover{background:#f5f5f5}
@@ -233,7 +235,7 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
   /* PCツールバー行を非表示、スマホ行を表示 */
   .toolbar{flex-direction:column;align-items:stretch;padding:8px 10px;gap:6px}
   .toolbar-left{display:none}
-  #mob-team-row{display:grid!important;grid-template-columns:repeat(5,1fr);gap:4px}
+  #mob-team-row{display:grid!important;grid-template-columns:repeat(6,1fr);gap:4px}
   #mob-team-row .chip{flex-direction:column;padding:6px 2px;font-size:9px;justify-content:center;border-radius:7px;gap:3px;white-space:nowrap}
   #mob-team-row .chip-logo{width:16px;height:16px}
   #mob-mark-row{display:grid!important;grid-template-columns:repeat(4,1fr);gap:4px}
@@ -289,6 +291,7 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
       <div class="chip cerezo" id="chip-cerezo" onclick="toggleTeam('cerezo')"><img class="chip-logo" src="https://www.cerezo.jp/logo/logo.svg" alt="">セレッソ</div>
       <div class="chip japan" id="chip-japan" onclick="toggleTeam('japan')"><img class="chip-logo" src="assets/jba-logo.png" alt="">日本代表</div>
       <div class="chip japan-soccer" id="chip-japan-soccer" onclick="toggleTeam('japan-soccer')"><img class="chip-logo" src="https://upload.wikimedia.org/wikipedia/en/thumb/8/84/Japan_national_football_team_crest.svg/250px-Japan_national_football_team_crest.svg.png" alt="">日本代表</div>
+      <div class="chip custom" id="chip-custom" onclick="toggleTeam('custom')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>追加</div>
       <div class="chip neutral" onclick="setAll()">すべて</div>
       <div style="width:1px;height:24px;background:#e0e0e0;margin:0 2px"></div>
       <div class="mf-btn all active" id="mf-all" onclick="setMF('all')">すべて</div>
@@ -302,6 +305,7 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
       <div class="chip cerezo" onclick="toggleTeam('cerezo')" id="mob-chip-cerezo"><img class="chip-logo" src="https://www.cerezo.jp/logo/logo.svg" alt="">セレッソ</div>
       <div class="chip japan" onclick="toggleTeam('japan')" id="mob-chip-japan"><img class="chip-logo" src="assets/jba-logo.png" alt="">日本代表</div>
       <div class="chip japan-soccer" onclick="toggleTeam('japan-soccer')" id="mob-chip-japan-soccer"><img class="chip-logo" src="https://upload.wikimedia.org/wikipedia/en/thumb/8/84/Japan_national_football_team_crest.svg/250px-Japan_national_football_team_crest.svg.png" alt="">日本代表</div>
+      <div class="chip custom" onclick="toggleTeam('custom')" id="mob-chip-custom"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>追加</div>
       <div class="chip neutral" onclick="setAll()">すべて</div>
     </div>
     <div class="toolbar-row mark-row" style="display:none" id="mob-mark-row">
@@ -580,7 +584,7 @@ function cupIcon(cupName,team){
 const DOW=['月','火','水','木','金','土','日'];
 const ML=['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
 let marks={}, memos={}, customGames=[], scores={};
-let showBrex=true,showCerezo=true,showJapanBasket=true,showJapanSoccer=true;
+let showBrex=true,showCerezo=true,showJapanBasket=true,showJapanSoccer=true,showCustom=true;
 let mf=[], curView='cal', layout='vert';
 let curY=2026, curM=8;
 let popupTarget=null;
@@ -655,14 +659,14 @@ function allEvs(){
     const mv=getMark('japan',e.d,i);
     if(passMF(mv))evs.push({...e,team:'japan',idx:i,mv});
   });
-  customGames.forEach((e,i)=>{const mv=getMark('custom',e.d,i);if(passMF(mv))evs.push({...e,team:'custom',idx:i,mv,isCustom:true});});
+  if(showCustom) customGames.forEach((e,i)=>{const mv=getMark('custom',e.d,i);if(passMF(mv))evs.push({...e,team:'custom',idx:i,mv,isCustom:true});});
   return evs;
 }
 
 // ── フィルタ ──
 function syncChips(){
-  ['brex','cerezo','japan','japan-soccer'].forEach(x=>{
-    const on=x==='brex'?showBrex:x==='cerezo'?showCerezo:x==='japan'?showJapanBasket:showJapanSoccer;
+  ['brex','cerezo','japan','japan-soccer','custom'].forEach(x=>{
+    const on=x==='brex'?showBrex:x==='cerezo'?showCerezo:x==='japan'?showJapanBasket:x==='japan-soccer'?showJapanSoccer:showCustom;
     const pc=document.getElementById('chip-'+x);
     const mob=document.getElementById('mob-chip-'+x);
     if(pc) pc.classList.toggle('off',!on);
@@ -682,10 +686,11 @@ window.toggleTeam=function(t){
   if(t==='brex')showBrex=!showBrex;
   else if(t==='cerezo')showCerezo=!showCerezo;
   else if(t==='japan')showJapanBasket=!showJapanBasket;
-  else showJapanSoccer=!showJapanSoccer;
+  else if(t==='japan-soccer')showJapanSoccer=!showJapanSoccer;
+  else showCustom=!showCustom;
   syncChips();renderCurrent();
 };
-window.setAll=function(){showBrex=true;showCerezo=true;showJapanBasket=true;showJapanSoccer=true;syncChips();renderCurrent();};
+window.setAll=function(){showBrex=true;showCerezo=true;showJapanBasket=true;showJapanSoccer=true;showCustom=true;syncChips();renderCurrent();};
 window.setMF=function(f){
   if(f==='all')mf=[];
   else mf=mf.includes(f)?mf.filter(x=>x!==f):[...mf,f];

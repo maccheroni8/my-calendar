@@ -173,10 +173,6 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 .popup-handle{display:none;width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 14px}
 .popup-title-label{font-size:10px;font-weight:700;color:#aeaeb2;margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase}
 .popup-team{font-size:14px;font-weight:700;margin-bottom:5px;line-height:1.4}
-.popup-score{display:inline-block;font-size:13px;font-weight:800;padding:3px 10px;border-radius:6px;margin-bottom:10px}
-.popup-score.ps-win{background:#0ea5e9;color:#fff}
-.popup-score.ps-lose{background:#94a3b8;color:#fff}
-.popup-score.ps-draw{background:#cbd5e1;color:#333}
 .popup-info{font-size:12px;color:#6e6e73;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid rgba(0,0,0,.06);line-height:1.7}
 .mark-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
 .mark-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:12px 4px;border-radius:9px;border:none;font-size:12px;font-weight:700;cursor:pointer;text-align:center;background:#f5f5f7;color:#6e6e73;transition:all .12s}
@@ -364,7 +360,6 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
   <div class="popup-handle"></div>
   <div class="popup-title-label">観戦予定をマーク</div>
   <div class="popup-team" id="popup-team"></div>
-  <div class="popup-score" id="popup-score" style="display:none"></div>
   <div class="popup-info" id="popup-info"></div>
   <div class="mark-row">
     <div class="mark-btn" id="mb-go" onclick="setMarkAction('go')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.8 2.8L16.3 9"/></svg> 行く</div>
@@ -875,7 +870,7 @@ function makeCell(y,m,d,other){
     // メモバッジはPCのみ表示
     if(!isMobile()&&getMemo(ev.team,ds,ev.idx)){const m2=document.createElement('span');m2.className='badge';m2.style.cssText='background:#f0e6ff;color:#7c3aed';m2.innerHTML=ic('note',10);tag.appendChild(m2);}
     const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?ev.op:(ev.cup||ev.op);
-    tag.addEventListener('click',e=>{e.stopPropagation();openPopup(e,ev.team,ds,ev.idx,clickOp,ev.venue||'',ev.isCustom,ev.sport,ev.op);});
+    tag.addEventListener('click',e=>{e.stopPropagation();openPopup(e,ev.team,ds,ev.idx,clickOp,ev.venue||'',ev.isCustom,ev.sport);});
     cell.appendChild(tag);
   });
   return cell;
@@ -954,7 +949,7 @@ function renderList(){
       } else {
         row.innerHTML=`<div class="l-date" style="color:${wC}">${dateStr}</div><span class="${badgeCl}">${badgeTx}</span><div class="l-op">${opTx}</div><div class="l-venue">${venueStr}</div>${scoreHtml}${markHtml}${memoHtml}`;
       }
-      row.addEventListener('click',e=>openPopup(e,ev.team,ev.d,ev.idx,clickOp,venueStr,ev.isCustom,ev.sport,ev.op));
+      row.addEventListener('click',e=>openPopup(e,ev.team,ev.d,ev.idx,clickOp,venueStr,ev.isCustom,ev.sport));
       rows.appendChild(row);
     });
     msec.appendChild(rows);body.appendChild(msec);
@@ -962,26 +957,20 @@ function renderList(){
 }
 
 // ── ポップアップ ──
-function openPopup(e,team,date,idx,op,info,isCustom,sport,opName){
+function openPopup(e,team,date,idx,op,info,isCustom,sport){
   popupTarget={team,date,idx,isCustom};
   const popup=document.getElementById('popup');
   const tEl=document.getElementById('popup-team');
+  // 結果（自動取得・試合終了分のみ）：確定していれば「vs」の代わりにスコアを表示
+  const sc=isCustom?null:getScore({team,sport,d:date});
+  const vsText=sc?` ${sc.myScore}-${sc.opScore} `:' vs ';
   if(team==='japan'){
     const isSoccer=sport==='soccer';
-    tEl.innerHTML=op;
+    tEl.innerHTML=sc?op.replace(' vs ',vsText):op;
     tEl.style.color=isSoccer?'#001E55':'#CC0000';
   }
   else if(isCustom){tEl.innerHTML=(sport==='basket'?ic('basket'):ic('soccer'))+' '+op;tEl.style.color='#555';}
-  else{tEl.innerHTML=(team==='brex'?ic('basket')+' 宇都宮ブレックス':ic('soccer')+' セレッソ大阪')+' vs '+op;tEl.style.color=team==='brex'?'#002B5C':'#E83D7A';}
-  // 結果（自動取得・試合終了分のみ）
-  const scEl=document.getElementById('popup-score');
-  const sc=isCustom?null:getScore({team,sport,d:date});
-  if(sc){
-    const ownName=team==='brex'?'宇都宮ブレックス':team==='cerezo'?'セレッソ大阪':'日本代表';
-    scEl.textContent=`${ownName} ${sc.myScore}-${sc.opScore} ${opName||op}`;
-    scEl.className='popup-score ps-'+scoreCls(sc);
-    scEl.style.display='inline-block';
-  } else scEl.style.display='none';
+  else{tEl.innerHTML=(team==='brex'?ic('basket')+' 宇都宮ブレックス':ic('soccer')+' セレッソ大阪')+vsText+op;tEl.style.color=team==='brex'?'#002B5C':'#E83D7A';}
   // 会場・時刻
   const infoEl=document.getElementById('popup-info');
   if(info){

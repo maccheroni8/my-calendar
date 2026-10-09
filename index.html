@@ -19,7 +19,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Plus Jakarta Sans','Helvetica
 svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px}
 
 /* sync bar - 全デバイスで非表示 */
-.sync-bar{display:none!important}
+.sync-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:11px}
+.sync-bar button{font:inherit;padding:5px 8px;border:0;border-radius:6px;cursor:pointer}
+[aria-disabled="true"]{opacity:.5;pointer-events:none}
 
 /* カレンダースクロールラッパー：PCでは無効 */
 .cal-scroll-wrap{display:contents}
@@ -57,7 +59,13 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 .mf-btn.maybe.active{background:#f59e0b;color:#fff;border-color:#f59e0b}
 .mf-btn.price{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
 .mf-btn.price.active{background:#a78bfa;color:#fff;border-color:#a78bfa}
-.toolbar-right{display:flex;align-items:center;gap:6px;justify-content:space-between}
+.toolbar-right{display:flex;align-items:center;gap:6px;justify-content:space-between;flex-wrap:wrap}
+.auth-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;max-width:100%;font-size:11px;color:#6e6e73}
+.auth-controls button{border:0;border-radius:8px;background:#f5f5f7;color:#1d1d1f;padding:8px;font:inherit;cursor:pointer}
+.auth-controls button:disabled{opacity:.5;cursor:default}
+.auth-status{overflow-wrap:anywhere}
+.auth-uid{flex-basis:100%;min-width:0}
+.auth-uid input{width:100%;min-width:0;font:inherit;padding:6px;border:1px solid #d2d2d7;border-radius:6px}
 .view-toggle-btn{width:34px;height:34px;border-radius:10px;border:none;background:#f5f5f7;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;font-size:16px}
 .view-toggle-btn:hover{background:#eee}
 .view-toggle-btn svg.ic{margin-right:0}
@@ -282,7 +290,9 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
   <!-- sync bar (mobile only) -->
   <div class="sync-bar">
     <span>☁️ クラウド同期</span>
-    <span class="sync-status loading" id="sync-status">接続中...</span>
+    <span class="sync-status loading" id="sync-status" role="status" aria-live="polite">認証確認中…</span>
+    <button type="button" id="sync-retry" hidden>保存を再試行</button>
+    <button type="button" id="sync-reload" hidden>再読み込み</button>
   </div>
 
   <div class="toolbar">
@@ -315,6 +325,13 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
       <div class="mf-btn price" id="mob-mf-price" onclick="setMF('price')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 3H5a2 2 0 00-2 2v7.5a2 2 0 00.6 1.4l9.5 9.5a2 2 0 002.8 0l7-7a2 2 0 000-2.8l-9.5-9.5a2 2 0 00-1.4-.6z"/><circle cx="8" cy="8.5" r="1.3" fill="currentColor" stroke="none"/></svg> 値段次第</div>
     </div>
     <div class="toolbar-right">
+      <div class="auth-controls">
+        <span class="auth-status" id="auth-status" role="status" aria-live="polite">認証確認中…</span>
+        <button type="button" id="auth-login" disabled>Googleでログイン</button>
+        <button type="button" id="auth-logout" hidden disabled>ログアウト</button>
+        <button type="button" id="auth-uid-toggle" aria-expanded="false" aria-controls="auth-uid-panel" hidden>UIDを確認</button>
+        <label class="auth-uid" id="auth-uid-panel" hidden>UID <input id="auth-uid" readonly></label>
+      </div>
       <div class="chip add-btn icon-only" onclick="openAddModal()" title="試合を追加">＋</div>
       <div style="display:flex;gap:6px;align-items:center">
         <div class="layout-toggle" id="layout-wrap" style="display:none">
@@ -432,7 +449,8 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, doc, runTransaction, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { BREX, CEREZO, JAPAN } from './data.js';
 
 const firebaseConfig = {
@@ -448,6 +466,64 @@ const db = getFirestore(app);
 const DOC_REF = doc(db, 'calendar', 'user_data');
 const SCORES_REF = doc(db, 'calendar', 'scores');
 
+const auth=getAuth(app);
+const googleProvider=new GoogleAuthProvider();
+googleProvider.setCustomParameters({prompt:'select_account'});
+let authUser=null,authReady=false,authBusy=false,authMessage='';
+const authStatus=document.getElementById('auth-status');
+const authLogin=document.getElementById('auth-login');
+const authLogout=document.getElementById('auth-logout');
+const authUidToggle=document.getElementById('auth-uid-toggle');
+const authUidPanel=document.getElementById('auth-uid-panel');
+const authUid=document.getElementById('auth-uid');
+function hideAuthUid(){
+  authUidPanel.hidden=true;authUid.value='';
+  authUidToggle.textContent='UIDを確認';authUidToggle.setAttribute('aria-expanded','false');
+}
+function renderAuth(){
+  authStatus.textContent=authMessage||(!authReady?'認証確認中…':authUser?'ログイン済み':'未ログイン');
+  authLogin.hidden=!!authUser;authLogout.hidden=!authUser;authUidToggle.hidden=!authUser;
+  authLogin.disabled=authLogout.disabled=authUidToggle.disabled=!authReady||authBusy;
+}
+function authErrorMessage(error){
+  switch(error.code){
+    case 'auth/popup-closed-by-user':return 'ログインをキャンセルしました';
+    case 'auth/popup-blocked':return 'ポップアップを許可して再度お試しください';
+    case 'auth/cancelled-popup-request':return 'ログインをやり直してください';
+    case 'auth/network-request-failed':return '通信に失敗しました。再度お試しください';
+    case 'auth/unauthorized-domain':return 'このドメインではログインできません';
+    default:return '認証に失敗しました。再度お試しください';
+  }
+}
+authLogin.addEventListener('click',async()=>{
+  if(!authReady||authBusy||auth.currentUser)return;
+  authBusy=true;authMessage='ログイン中…';hideAuthUid();renderAuth();
+  try{await signInWithPopup(auth,googleProvider);authMessage='';}
+  catch(error){authMessage=authErrorMessage(error);}
+  finally{authBusy=false;renderAuth();}
+});
+authLogout.addEventListener('click',async()=>{
+  if(!authReady||authBusy||!auth.currentUser)return;
+  if(hasDraft()&&!confirm('入力途中のメモ・追加フォームを破棄してログアウトしますか？'))return;
+  const session=dataSession;
+  loggingOut=true;authBusy=true;authMessage='保存を確認中…';hideAuthUid();renderAuth();updateEditControls();
+  try{
+    clearTimeout(saveTimer);saveTimer=null;
+    if(savePromise&&!(await saveToFirebase())){authMessage='保存できないためログアウトを中止しました';return;}
+    if(session!==dataSession)return;
+    if(hasUnsaved()&&!(await saveToFirebase())){authMessage='未保存の変更があるためログアウトを中止しました';return;}
+    if(session!==dataSession)return;
+    authMessage='ログアウト中…';renderAuth();await signOut(auth);authMessage='';
+  }
+  catch(error){authMessage=authErrorMessage(error);}
+  finally{loggingOut=false;authBusy=false;renderAuth();updateEditControls();}
+});
+authUidToggle.addEventListener('click',()=>{
+  if(!authReady||authBusy||!authUser||authUser.uid!==auth.currentUser?.uid)return;
+  if(!authUidPanel.hidden){hideAuthUid();return;}
+  authUid.value=authUser.uid;authUidPanel.hidden=false;
+  authUidToggle.textContent='UIDを閉じる';authUidToggle.setAttribute('aria-expanded','true');
+});
 // ── アイコン（絵文字の代わりの線画SVG） ──
 const ICO_PATHS={
   basket:'<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6c2.6 3 2.6 9.8 12.8 12.8M18.4 5.6c-2.6 3-2.6 9.8-12.8 12.8"/>',
@@ -566,7 +642,8 @@ const ABBR={
   'レノファ山口FC':'山口','カマタマーレ讃岐':'讃岐','愛媛FC':'愛媛','高知ユナイテッドSC':'高知',
   'ギラヴァンツ北九州':'北九州','ロアッソ熊本':'熊本','鹿児島ユナイテッドFC':'鹿児島','FC琉球':'琉球F'
 };
-function abbr(name){return ABBR[name]||name;}
+function abbr(name){return Object.hasOwn(ABBR,name)?ABBR[name]:name;}
+function escapeHTML(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 // カップ戦略称（スマホ2行表示用：フルネームで返す）
 const CUP_ABBR={'ルヴァンカップ':'ルヴァン','天皇杯':'天皇杯','ACL':'ACL','スーパーカップ':'SC'};
@@ -601,28 +678,148 @@ const isMobile=()=>window.innerWidth<=600;
 // renderCal()はすべての関数定義後に呼ぶ（スクリプト末尾参照）
 
 // ── Firebase ──
-function setSyncStatus(msg,cls){const el=document.getElementById('sync-status');if(el){el.textContent=msg;el.className='sync-status '+cls;}}
-onSnapshot(DOC_REF,(snap)=>{
-  if(snap.exists()){const d=snap.data();marks=d.marks||{};memos=d.memos||{};customGames=d.customGames||[];}
-  setSyncStatus('同期済み ✓','ok');
-  renderCurrent();
-},(err)=>{
-  setSyncStatus('接続エラー ⚠','err');
-  renderCurrent(); // エラー時もカレンダーは表示する
-});
+const OWNER_UID='J12fLmUjDagnk2cbElZRwOOCfb13'; // Firebase Consoleで確認した本人のUIDを設定。空欄では個人データに接続しない。
+let dataSession=0,unsubscribeUser=null,dataReady=false,dataBlocked=false;
+let serverData=null,editRevision=0,savedRevision=0,savePromise=null,queuedSnapshot=null,loggingOut=false;
+function isOwner(){return !!OWNER_UID&&authReady&&authUser?.uid===OWNER_UID&&auth.currentUser?.uid===OWNER_UID;}
+function canEdit(){return isOwner()&&dataReady&&!dataBlocked&&!loggingOut;}
+function hasUnsaved(){return editRevision!==savedRevision;}
+function hasDraft(){
+  const memoChanged=popupTarget&&document.getElementById('memo-ta').value!==getMemo(popupTarget.team,popupTarget.date,popupTarget.idx);
+  const addChanged=document.getElementById('add-modal').classList.contains('show')&&(['add-opponent','add-opponent2','add-date','add-time','add-memo'].some(id=>document.getElementById(id).value)||addMarkVal.length);
+  return !!(memoChanged||addChanged);
+}
+function updateEditControls(){
+  const disabled=!canEdit();
+  document.querySelectorAll('.mark-btn,.chip.add-btn,.memo-save,.memo-clr,.popup-delete,.add-submit,.memo-ta,.add-modal input,.add-modal select,.add-modal textarea,.sport-btn,.ms-btn').forEach(el=>{
+    el.disabled=disabled;el.setAttribute('aria-disabled',String(disabled));
+  });
+  document.getElementById('sync-retry').hidden=!hasUnsaved()||!dataReady||dataBlocked||!!savePromise||loggingOut;
+  document.getElementById('sync-reload').hidden=!isOwner()||!!savePromise||loggingOut;
+}
+function setSyncStatus(msg,cls){const el=document.getElementById('sync-status');el.textContent=msg;el.className='sync-status '+cls;updateEditControls();}
+function validUserData(d){
+  const map=v=>v!==null&&typeof v==='object'&&!Array.isArray(v)&&Object.getPrototypeOf(v)===Object.prototype;
+  const jsonValue=v=>v===null||typeof v==='string'||typeof v==='boolean'||(typeof v==='number'&&Number.isFinite(v))||(Array.isArray(v)?v.every(jsonValue):map(v)&&Object.values(v).every(jsonValue));
+  return map(d)&&jsonValue(d)&&map(d.marks)&&map(d.memos)&&Array.isArray(d.customGames)
+    &&Object.values(d.marks).every(v=>(typeof v==='string'||Array.isArray(v))&&(Array.isArray(v)?v:[v]).every(x=>['go','maybe','price'].includes(x)))
+    &&Object.values(d.memos).every(v=>typeof v==='string')
+    &&d.customGames.every(e=>map(e)&&typeof e.d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(e.d)&&typeof e.op==='string'&&['basket','soccer'].includes(e.sport)
+      &&['venue','cup','competition'].every(k=>!(k in e)||typeof e[k]==='string')&&(!('h' in e)||e.h===null||typeof e.h==='boolean')&&(!('isCustom' in e)||typeof e.isCustom==='boolean'))
+    &&(!('updatedAt' in d)||typeof d.updatedAt==='string');
+}
+function sameData(a,b){
+  if(a===b)return true;
+  if(!a||!b||typeof a!=='object'||typeof b!=='object'||Array.isArray(a)!==Array.isArray(b))return false;
+  const keys=Object.keys(a);return keys.length===Object.keys(b).length&&keys.every(k=>Object.hasOwn(b,k)&&sameData(a[k],b[k]));
+}
+function clearPersonalData(){
+  marks={};memos={};customGames=[];serverData=null;editRevision=savedRevision=0;addMarkVal=[];
+  window.closePopup();window.closeAddModal();
+  ['memo-ta','add-opponent','add-opponent2','add-date','add-time','add-memo'].forEach(id=>document.getElementById(id).value='');
+  ['popup-team','popup-info'].forEach(id=>document.getElementById(id).textContent='');
+  document.getElementById('memo-tag').style.opacity='0';
+  document.getElementById('list-body').textContent='';document.getElementById('summary-section').textContent='';
+  renderCal();if(curView==='list')renderList();
+}
+function stopPersonalData(){
+  dataSession++;if(unsubscribeUser)unsubscribeUser();unsubscribeUser=null;
+  clearTimeout(saveTimer);saveTimer=null;savePromise=null;queuedSnapshot=null;dataReady=false;dataBlocked=false;
+  clearPersonalData();
+}
+function blockData(message){
+  dataReady=false;dataBlocked=true;clearTimeout(saveTimer);saveTimer=null;setSyncStatus(message,'err');
+}
+function receiveUserData(snap,session){
+  if(session!==dataSession||!isOwner()||dataBlocked)return;
+  if(savePromise){queuedSnapshot=snap;return;}
+  if(snap.metadata.fromCache||snap.metadata.hasPendingWrites){
+    dataReady=false;clearTimeout(saveTimer);saveTimer=null;setSyncStatus('サーバー確認待ち（編集停止）','loading');return;
+  }
+  if(!snap.exists()){blockData('データが存在しません。保存せず停止しました');return;}
+  const d=snap.data();
+  if(!validUserData(d)){blockData('データ形式を確認できません。保存せず停止しました');return;}
+  if((hasUnsaved()||hasDraft())&&serverData&&!sameData(d,serverData)){
+    blockData('別の更新を検出。未保存の内容を控えてから再読み込みしてください');return;
+  }
+  serverData=structuredClone(d);dataReady=true;
+  if(!hasUnsaved()){
+    marks=structuredClone(d.marks);memos=structuredClone(d.memos);customGames=structuredClone(d.customGames);renderCurrent();
+  }
+  setSyncStatus(hasUnsaved()?'未保存の変更があります。「保存を再試行」を押してください':'同期済み ✓',hasUnsaved()?'err':'ok');
+}
+function startPersonalData(){
+  stopPersonalData();
+  if(!OWNER_UID){setSyncStatus('所有者UID未設定：個人データへのアクセス停止','loading');return;}
+  if(!isOwner()){setSyncStatus(authUser?'このアカウントは利用できません':'ログインすると個人データを読み込みます','loading');return;}
+  const session=dataSession;setSyncStatus('個人データを読み込み中…','loading');
+  unsubscribeUser=onSnapshot(DOC_REF,{includeMetadataChanges:true},snap=>receiveUserData(snap,session),()=>{
+    if(session===dataSession&&isOwner())blockData('個人データの読み込みに失敗しました（編集停止）');
+  });
+}
 onSnapshot(SCORES_REF,(snap)=>{
   scores=(snap.exists()&&snap.data().results)||{};
   renderCurrent();
 },()=>{});
 async function saveToFirebase(){
-  try{setSyncStatus('保存中...','loading');await setDoc(DOC_REF,{marks,memos,customGames,updatedAt:new Date().toISOString()});setSyncStatus('保存しました ✓','ok');}
-  catch(e){setSyncStatus('保存失敗 ⚠','err');}
+  clearTimeout(saveTimer);saveTimer=null;
+  if(savePromise)return savePromise;
+  if(!isOwner()||!dataReady||dataBlocked)return false;
+  if(!hasUnsaved())return true;
+  const session=dataSession,revision=editRevision,base=structuredClone(serverData);
+  const payload={...base,marks:structuredClone(marks),memos:structuredClone(memos),customGames:structuredClone(customGames),updatedAt:new Date().toISOString()};
+  if(!validUserData(payload)){blockData('保存内容の形式を確認できません（未保存）');return false;}
+  setSyncStatus('保存中…','loading');
+  const task=(async()=>{
+    try{
+      await runTransaction(db,async transaction=>{
+        if(session!==dataSession||!isOwner()||dataBlocked)throw new Error('stale-session');
+        const snap=await transaction.get(DOC_REF);
+        if(session!==dataSession||!isOwner()||dataBlocked)throw new Error('stale-session');
+        if(!snap.exists()||!validUserData(snap.data())||!sameData(snap.data(),base))throw new Error('data-conflict');
+        transaction.set(DOC_REF,payload);
+      });
+      if(session!==dataSession||!isOwner())return false;
+      serverData=payload;savedRevision=revision;
+      if(dataBlocked)return false;
+      setSyncStatus(hasUnsaved()?'未保存の変更があります':'保存しました ✓',hasUnsaved()?'loading':'ok');
+      return true;
+    }catch(error){
+      if(session!==dataSession||!isOwner())return false;
+      if(error.message==='data-conflict')blockData('別の更新・データ異常を検出。未保存の内容を控えて再読み込みしてください');
+      else if(error.code==='permission-denied')blockData('保存権限がありません（未保存）');
+      else setSyncStatus('保存失敗：変更は未保存です。再試行してください','err');
+      return false;
+    }
+  })();
+  savePromise=task;updateEditControls();
+  const ok=await task;
+  if(session!==dataSession)return false;
+  savePromise=null;
+  if(queuedSnapshot){const snap=queuedSnapshot;queuedSnapshot=null;receiveUserData(snap,session);}
+  updateEditControls();
+  if(ok&&hasUnsaved()&&dataReady&&!dataBlocked&&!loggingOut)saveTimer=setTimeout(saveToFirebase,800);
+  return ok&&!dataBlocked;
 }
-function debouncedSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveToFirebase,800);}
+function debouncedSave(){
+  if(!canEdit())return;
+  editRevision++;clearTimeout(saveTimer);saveTimer=null;
+  document.getElementById('memo-tag').style.opacity='0';setSyncStatus('未保存の変更があります','loading');
+  if(!savePromise)saveTimer=setTimeout(saveToFirebase,800);
+}
+document.getElementById('sync-retry').addEventListener('click',()=>{if(canEdit())saveToFirebase();});
+document.getElementById('sync-reload').addEventListener('click',()=>{
+  if(!isOwner()||savePromise||loggingOut)return;
+  if((hasUnsaved()||hasDraft())&&!confirm('未保存の内容を破棄して、サーバーから読み直しますか？'))return;
+  startPersonalData();
+});
+window.addEventListener('beforeunload',event=>{
+  if(hasUnsaved()||savePromise||hasDraft()){event.preventDefault();event.returnValue='';}
+});
 
 // ── マーク・メモ ──
 function mk(t,d,i){return t+'_'+d+'_'+i;}
-function getMark(t,d,i){const v=marks[mk(t,d,i)];if(!v)return[];return Array.isArray(v)?v:[v];}
+function getMark(t,d,i){const v=marks[mk(t,d,i)];if(!v)return[];return (Array.isArray(v)?v:[v]).filter(x=>['go','maybe','price'].includes(x));}
 function getMemo(t,d,i){return memos[mk(t,d,i)]||'';}
 // ── 日本の祝日（2026年8月〜2027年6月） ──
 const HOLIDAYS=new Set([
@@ -779,9 +976,9 @@ const TEAM_LOGO={
 
 // ロゴ画像HTML生成（スマホ専用）
 function logoImg(name){
-  const url=TEAM_LOGO[name];
-  if(!url) return `<span class="ev-abbr">${abbr(name)}</span>`;
-  return `<img class="ev-logo" src="${url}" alt="${abbr(name)}" onerror="this.style.display='none';this.nextSibling.style.display='inline'"><span class="ev-abbr" style="display:none">${abbr(name)}</span>`;
+  const url=Object.hasOwn(TEAM_LOGO,name)?TEAM_LOGO[name]:null;
+  if(!url) return `<span class="ev-abbr">${escapeHTML(abbr(name))}</span>`;
+  return `<img class="ev-logo" src="${escapeHTML(url)}" alt="${escapeHTML(abbr(name))}" onerror="this.style.display='none';this.nextSibling.style.display='inline'"><span class="ev-abbr" style="display:none">${escapeHTML(abbr(name))}</span>`;
 }
 
 function evLabelMobileHTML(ev,landscape){
@@ -795,14 +992,14 @@ function evLabelMobileHTML(ev,landscape){
     const icon=ic(cupIcon(ev.cup,ev.team));
     const cupName=cupAbbr(ev.cup);
     const opText=ev.op==='未定（仮）'?'（仮）':abbr(ev.op);
-    if(landscape) return `<span class="ev-logo-abbr">${icon}<span class="ev-abbr"> ${cupName}</span></span>`;
-    return `<span class="ev-text-wrap">${icon}${cupName}<br>${opText}</span>`;
+    if(landscape) return `<span class="ev-logo-abbr">${icon}<span class="ev-abbr"> ${escapeHTML(cupName)}</span></span>`;
+    return `<span class="ev-text-wrap">${icon}${escapeHTML(cupName)}<br>${escapeHTML(opText)}</span>`;
   }
   if(isCustom){
     // 2チームの場合は常に略称（ロゴ2つはスペース不足のため）
     const parts=ev.op.split(' vs ');
     const icon=ic(ev.sport==='basket'?'basket':'soccer');
-    const abbrOp=parts.map(n=>abbr(n.trim())).join('<span class="ev-vs"> - </span>');
+    const abbrOp=parts.map(n=>escapeHTML(abbr(n.trim()))).join('<span class="ev-vs"> - </span>');
     if(landscape) return `<span class="ev-logo-abbr">${icon}<span class="ev-abbr"> ${abbrOp}</span></span>`;
     return `<span class="ev-text-wrap">${icon} ${abbrOp}</span>`;
   }
@@ -811,24 +1008,24 @@ function evLabelMobileHTML(ev,landscape){
   const preLabel='';
   if(landscape){
     // 横表示：ロゴ＋略称を横並び
-    if(logoUrl) return `<span class="ev-logo-abbr" style="flex-direction:column;align-items:flex-start">${preLabel}<span style="display:flex;align-items:center;gap:2px">${logoImg(ev.op)}<span class="ev-abbr"> ${abbr(ev.op)}</span></span></span>`;
+    if(logoUrl) return `<span class="ev-logo-abbr" style="flex-direction:column;align-items:flex-start">${preLabel}<span style="display:flex;align-items:center;gap:2px">${logoImg(ev.op)}<span class="ev-abbr"> ${escapeHTML(abbr(ev.op))}</span></span></span>`;
     const icon=ic(ev.team==='brex'?'basket':'soccer');
-    return `<span class="ev-logo-abbr" style="flex-direction:column;align-items:flex-start">${preLabel}<span>${icon}<span class="ev-abbr"> ${abbr(ev.op)}</span></span></span>`;
+    return `<span class="ev-logo-abbr" style="flex-direction:column;align-items:flex-start">${preLabel}<span>${icon}<span class="ev-abbr"> ${escapeHTML(abbr(ev.op))}</span></span></span>`;
   }
   // 縦表示：PSをロゴの上に（flexで縦積み）
   if(logoUrl) return `<span style="display:flex;flex-direction:column;align-items:center;width:100%">${preLabel}${logoImg(ev.op)}</span>`;
   const icon=ic(ev.team==='brex'?'basket':'soccer');
-  return `<span class="ev-text-wrap">${preLabel}${icon} ${abbr(ev.op)}</span>`;
+  return `<span class="ev-text-wrap">${preLabel}${icon} ${escapeHTML(abbr(ev.op))}</span>`;
 }
 
 function evLabelPC(ev){
   const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.isCustom,isTbd=ev.h===null||ev.h===undefined;
-  if(isJP){const icon=ic(ev.sport==='soccer'?'soccer':'basket');return `${icon}${ev.competition}`;}
-  if(isCup){return `${ic('trophy')}${ev.cup}`;}
-  if(isCustom){const icon=ic(ev.sport==='basket'?'basket':'soccer');const hoa=isTbd?'':(ev.h?'H ':'A ');return `${icon}${hoa}${ev.op}`;}
+  if(isJP){const icon=ic(ev.sport==='soccer'?'soccer':'basket');return `${icon}${escapeHTML(ev.competition)}`;}
+  if(isCup){return `${ic('trophy')}${escapeHTML(ev.cup)}`;}
+  if(isCustom){const icon=ic(ev.sport==='basket'?'basket':'soccer');const hoa=isTbd?'':(ev.h?'H ':'A ');return `${icon}${hoa}${escapeHTML(ev.op)}`;}
   const icon=ic(ev.team==='brex'?'basket':'soccer');
   const hoa=isTbd?'':(ev.h?'H ':'A ');
-  return `${icon}${hoa}${ev.op}`;
+  return `${icon}${hoa}${escapeHTML(ev.op)}`;
 }
 
 function makeCell(y,m,d,other){
@@ -903,13 +1100,13 @@ function renderList(){
   sec.innerHTML=html;
   const body=document.getElementById('list-body');body.innerHTML='';
   if(!evs.length){body.innerHTML='<div class="empty-msg">該当なし</div>';return;}
-  const byM={};evs.forEach(ev=>{const k=ev.d.slice(0,7);if(!byM[k])byM[k]=[];byM[k].push(ev);});
+  const byM=Object.create(null);evs.forEach(ev=>{const k=ev.d.slice(0,7);if(!byM[k])byM[k]=[];byM[k].push(ev);});
   Object.keys(byM).sort().forEach(ym=>{
     const[y,m]=ym.split('-');const mes=byM[ym];
     const go=mes.filter(e=>e.mv.includes('go')).length,maybe=mes.filter(e=>e.mv.includes('maybe')).length,price=mes.filter(e=>e.mv.includes('price')).length,none=mes.filter(e=>!e.mv.length).length;
     const msec=document.createElement('div');msec.className='month-section';
     const hdr=document.createElement('div');hdr.className='month-header';
-    hdr.innerHTML=`<h3>${y}年${ML[parseInt(m)]} <span style="color:#bbb;font-weight:400;font-size:12px">（${mes.length}試合）</span></h3><div class="month-counts">${go?`<span class="sum-mini s-go">${ic('check',11)} ${go}</span>`:''}${maybe?`<span class="sum-mini s-maybe">${ic('maybe',10)} ${maybe}</span>`:''}${price?`<span class="sum-mini s-price">${ic('price',10)} ${price}</span>`:''}${none&&mf.length===0?`<span class="sum-mini s-none">未 ${none}</span>`:''}</div>`;
+    hdr.innerHTML=`<h3>${escapeHTML(y)}年${ML[parseInt(m)]} <span style="color:#bbb;font-weight:400;font-size:12px">（${mes.length}試合）</span></h3><div class="month-counts">${go?`<span class="sum-mini s-go">${ic('check',11)} ${go}</span>`:''}${maybe?`<span class="sum-mini s-maybe">${ic('maybe',10)} ${maybe}</span>`:''}${price?`<span class="sum-mini s-price">${ic('price',10)} ${price}</span>`:''}${none&&mf.length===0?`<span class="sum-mini s-none">未 ${none}</span>`:''}</div>`;
     msec.appendChild(hdr);
     const rows=document.createElement('div');rows.className='list-rows'+(layout==='hori'?' hori':'');
     mes.forEach(ev=>{
@@ -931,23 +1128,23 @@ function renderList(){
         badgeCl='l-badge '+(isSoccer?'lb-japan-soccer':'lb-japan');
         badgeTx=`${ic(isSoccer?'soccer':'basket')} ${isSoccer?'サッカー':'バスケ'}`;opTx=`${ev.competition} vs ${ev.op}`;
       }
-      else if(isCup){badgeCl='l-badge lb-cup';badgeTx=ic('trophy')+' '+ev.cup;opTx=ev.op;}
+      else if(isCup){badgeCl='l-badge lb-cup';badgeTx=ic('trophy')+' '+escapeHTML(ev.cup);opTx=ev.op;}
       else{const isB=ev.team==='brex';badgeCl='l-badge '+(isB?(ev.h?'lb-brex':'lb-brex-a'):(ev.h?'lb-cerezo':'lb-cerezo-a'));badgeTx=(isB?ic('basket')+' ブレックス':ic('soccer')+' セレッソ')+(isTbd?'':(ev.h?' HOME':' AWAY'));opTx='vs '+ev.op;}
       const markHtml=ev.mv.length?ev.mv.map(v=>`<span class="l-mark lm-${v}">${v==='go'?ic('check',11)+' 行く':v==='maybe'?ic('maybe',11)+' できたら':ic('price',11)+' 値段次第'}</span>`).join(''):`<span class="l-mark lm-none">未定</span>`;
       const sc=getScore(ev);
-      const scoreHtml=sc?`<span class="l-score ls-${scoreCls(sc)}">${scoreText(sc)}</span>`:'';
+      const scoreHtml=sc?`<span class="l-score ls-${scoreCls(sc)}">${escapeHTML(scoreText(sc))}</span>`:'';
       const memo=getMemo(ev.team,ev.d,ev.idx);
-      const memoHtml=memo?`<div class="l-memo">${ic('note',11)} ${memo.slice(0,60)}${memo.length>60?'…':''}</div>`:'';
+      const memoHtml=memo?`<div class="l-memo">${ic('note',11)} ${escapeHTML(memo.slice(0,60))}${memo.length>60?'…':''}</div>`:'';
       const row=document.createElement('div');row.className='list-row';
       const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?ev.op:(ev.cup||ev.op);
       const venueStr=ev.venue||'';
       if(layout==='hori'){
-        row.innerHTML=`<span class="l-date" style="color:${wC};display:block;margin-bottom:4px">${dateStr}</span><div style="margin-bottom:4px"><span class="${badgeCl}">${badgeTx}</span></div><div style="font-size:12px;font-weight:500;margin-bottom:2px">${opTx}</div><div style="font-size:10px;color:#bbb;margin-bottom:4px">${venueStr}</div>${scoreHtml}${markHtml}${memoHtml}`;
+        row.innerHTML=`<span class="l-date" style="color:${wC};display:block;margin-bottom:4px">${escapeHTML(dateStr)}</span><div style="margin-bottom:4px"><span class="${badgeCl}">${badgeTx}</span></div><div style="font-size:12px;font-weight:500;margin-bottom:2px">${escapeHTML(opTx)}</div><div style="font-size:10px;color:#bbb;margin-bottom:4px">${escapeHTML(venueStr)}</div>${scoreHtml}${markHtml}${memoHtml}`;
       } else if(isMobile()){
         row.classList.add('mob-card');
-        row.innerHTML=`<div class="mrow-top"><div class="mrow-left"><span class="l-date" style="color:${wC}">${dateStr}</span><span class="${badgeCl}">${badgeTx}</span></div><div class="mrow-right">${scoreHtml}${markHtml}</div></div><div class="l-op">${opTx}</div><div class="l-venue">${venueStr}</div>${memoHtml}`;
+        row.innerHTML=`<div class="mrow-top"><div class="mrow-left"><span class="l-date" style="color:${wC}">${escapeHTML(dateStr)}</span><span class="${badgeCl}">${badgeTx}</span></div><div class="mrow-right">${scoreHtml}${markHtml}</div></div><div class="l-op">${escapeHTML(opTx)}</div><div class="l-venue">${escapeHTML(venueStr)}</div>${memoHtml}`;
       } else {
-        row.innerHTML=`<div class="l-date" style="color:${wC}">${dateStr}</div><span class="${badgeCl}">${badgeTx}</span><div class="l-op">${opTx}</div><div class="l-venue">${venueStr}</div>${scoreHtml}${markHtml}${memoHtml}`;
+        row.innerHTML=`<div class="l-date" style="color:${wC}">${escapeHTML(dateStr)}</div><span class="${badgeCl}">${badgeTx}</span><div class="l-op">${escapeHTML(opTx)}</div><div class="l-venue">${escapeHTML(venueStr)}</div>${scoreHtml}${markHtml}${memoHtml}`;
       }
       row.addEventListener('click',e=>openPopup(e,ev.team,ev.d,ev.idx,clickOp,venueStr,ev.isCustom,ev.sport));
       rows.appendChild(row);
@@ -958,6 +1155,7 @@ function renderList(){
 
 // ── ポップアップ ──
 function openPopup(e,team,date,idx,op,info,isCustom,sport){
+  updateEditControls();
   popupTarget={team,date,idx,isCustom};
   const popup=document.getElementById('popup');
   const tEl=document.getElementById('popup-team');
@@ -966,18 +1164,19 @@ function openPopup(e,team,date,idx,op,info,isCustom,sport){
   const vsText=sc?` ${sc.myScore}-${sc.opScore} `:' vs ';
   if(team==='japan'){
     const isSoccer=sport==='soccer';
-    tEl.innerHTML=sc?op.replace(' vs ',vsText):op;
+    tEl.textContent=sc?op.replace(' vs ',vsText):op;
     tEl.style.color=isSoccer?'#001E55':'#CC0000';
   }
-  else if(isCustom){tEl.innerHTML=(sport==='basket'?ic('basket'):ic('soccer'))+' '+op;tEl.style.color='#555';}
-  else{tEl.innerHTML=(team==='brex'?ic('basket')+' 宇都宮ブレックス':ic('soccer')+' セレッソ大阪')+vsText+op;tEl.style.color=team==='brex'?'#002B5C':'#E83D7A';}
+  else if(isCustom){tEl.innerHTML=sport==='basket'?ic('basket'):ic('soccer');tEl.append(document.createTextNode(' '+op));tEl.style.color='#555';}
+  else{tEl.innerHTML=ic(team==='brex'?'basket':'soccer');tEl.append(document.createTextNode((team==='brex'?' 宇都宮ブレックス':' セレッソ大阪')+vsText+op));tEl.style.color=team==='brex'?'#002B5C':'#E83D7A';}
   // 会場・時刻
   const infoEl=document.getElementById('popup-info');
   if(info){
     const tm=info.match(/\d{1,2}:\d{2}/);
     const isBasket=team==='brex'||(team==='japan'&&sport==='basket')||(isCustom&&sport==='basket');
     const word=isBasket?'ティップオフ':'キックオフ';
-    infoEl.innerHTML=(tm?`${ic('clock',12)} <strong>${tm[0]}</strong> ${word}<br>`:'')+ic('pin',12)+' '+(tm?info.replace(tm[0],'').trim():info);
+    infoEl.innerHTML=(tm?`${ic('clock',12)} <strong>${tm[0]}</strong> ${word}<br>`:'')+ic('pin',12);
+    infoEl.append(document.createTextNode(' '+(tm?info.replace(tm[0],'').trim():info)));
     infoEl.style.display='block';
   } else infoEl.style.display='none';
   const cur=getMark(team,date,idx);
@@ -1005,7 +1204,9 @@ function openPopup(e,team,date,idx,op,info,isCustom,sport){
 window.closePopup=function(){document.getElementById('popup').classList.remove('show');document.getElementById('overlay').classList.remove('show');popupTarget=null;};
 document.addEventListener('click',e=>{const p=document.getElementById('popup');if(p.classList.contains('show')&&!p.contains(e.target)&&e.target!==document.getElementById('overlay'))window.closePopup();},true);
 window.setMarkAction=function(v){
+  if(!canEdit())return;
   if(!popupTarget)return;const{team,date,idx}=popupTarget;
+  if(v!==null&&!['go','maybe','price'].includes(v))return;
   const key=mk(team,date,idx);
   if(v===null){delete marks[key];debouncedSave();window.closePopup();renderCurrent();return;}
   let cur=getMark(team,date,idx).slice();
@@ -1015,13 +1216,15 @@ window.setMarkAction=function(v){
   debouncedSave();renderCurrent();
 };
 window.saveMemo=function(){
+  if(!canEdit())return;
   if(!popupTarget)return;const{team,date,idx}=popupTarget;
   const v=document.getElementById('memo-ta').value.trim();
   if(v)memos[mk(team,date,idx)]=v;else delete memos[mk(team,date,idx)];
-  debouncedSave();const tag=document.getElementById('memo-tag');tag.style.opacity='1';setTimeout(()=>tag.style.opacity='0',1800);renderCurrent();
+  debouncedSave();renderCurrent();
 };
-window.clearMemo=function(){document.getElementById('memo-ta').value='';window.saveMemo();};
+window.clearMemo=function(){if(!canEdit())return;document.getElementById('memo-ta').value='';window.saveMemo();};
 window.deleteCustomGame=function(){
+  if(!canEdit())return;
   if(!popupTarget||!popupTarget.isCustom)return;
   if(!confirm('この試合を削除しますか？'))return;
   const idx=popupTarget.idx;
@@ -1034,6 +1237,7 @@ window.deleteCustomGame=function(){
 
 // ── 試合追加モーダル ──
 window.openAddModal=function(){
+  if(!canEdit())return;
   addSport='basket';addMarkVal=[];
   document.getElementById('sp-basket').className='sport-btn active-basket';
   document.getElementById('sp-soccer').className='sport-btn';
@@ -1046,6 +1250,7 @@ window.openAddModal=function(){
 };
 window.closeAddModal=function(){document.getElementById('add-modal').classList.remove('show');};
 window.setSport=function(s){
+  if(!canEdit())return;
   addSport=s;
   document.getElementById('sp-basket').className='sport-btn'+(s==='basket'?' active-basket':'');
   document.getElementById('sp-soccer').className='sport-btn'+(s==='soccer'?' active-soccer':'');
@@ -1069,10 +1274,13 @@ function updateOpponentList(){
   document.getElementById('add-opponent').innerHTML='<option value="">選択してください</option>'+document.getElementById('add-opponent').innerHTML.replace('<option value="">（なし）</option>','');
 }
 window.setAddMark=function(v){
+  if(!canEdit())return;
+  if(!['go','maybe','price'].includes(v))return;
   addMarkVal=addMarkVal.includes(v)?addMarkVal.filter(x=>x!==v):[...addMarkVal,v];
   ['go','maybe','price'].forEach(x=>document.getElementById('ms-'+x).className='ms-btn'+(addMarkVal.includes(x)?' active-'+x:''));
 };
 window.submitAddGame=function(){
+  if(!canEdit())return;
   const op1=document.getElementById('add-opponent').value;
   const op2=document.getElementById('add-opponent2').value;
   const date=document.getElementById('add-date').value;
@@ -1107,6 +1315,13 @@ const t2=new Date();curY=t2.getFullYear();curM=t2.getMonth()+1;
 if(curY<2026||(curY===2026&&curM<8)){curY=2026;curM=8;}
 if(curY>2027||(curY===2027&&curM>6)){curY=2027;curM=6;}
 renderCal(); // Firebase接続前に即描画
+updateEditControls();
+onAuthStateChanged(auth,user=>{
+  authUser=user;authReady=true;authMessage='';hideAuthUid();renderAuth();startPersonalData();
+},()=>{
+  authUser=null;authReady=false;authMessage='認証状態を確認できません。再読み込みしてください';
+  hideAuthUid();renderAuth();stopPersonalData();setSyncStatus('認証エラー：個人データへのアクセス停止','err');
+});
 </script>
 </body>
 </html>

@@ -678,7 +678,7 @@ const isMobile=()=>window.innerWidth<=600;
 // renderCal()はすべての関数定義後に呼ぶ（スクリプト末尾参照）
 
 // ── Firebase ──
-const OWNER_UID='jRu7Uv0xMS1pmeCBPPcuGFmEvnP0'; // Firebase Consoleで確認した本人のUIDを設定。空欄では個人データに接続しない。
+const OWNER_UID='J12fLmUjDagnk2cbElZRwOOCfb13'; // Firebase Consoleで確認した本人のUIDを設定。空欄では個人データに接続しない。
 let dataSession=0,unsubscribeUser=null,dataReady=false,dataBlocked=false;
 let serverData=null,editRevision=0,savedRevision=0,savePromise=null,queuedSnapshot=null,loggingOut=false;
 function isOwner(){return !!OWNER_UID&&authReady&&authUser?.uid===OWNER_UID&&auth.currentUser?.uid===OWNER_UID;}

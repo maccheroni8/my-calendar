@@ -16,6 +16,7 @@ const TARGETS = [
     url: 'https://sports.yahoo.co.jp/basket/widget/ds/pc/teams/703/schedule.html',
     sport: 'basket',
     teamName: '宇都宮',
+    monthly: true,
     dates: BREX.map(e => e.d),
   },
   {
@@ -139,6 +140,17 @@ function parseSoccer(html, target, dateMap) {
 async function fetchTarget(target) {
   const dateMap = buildDateMap(target.dates);
   if (dateMap.size === 0) return [];
+  if (target.monthly) {
+    const months = [...new Set([...dateMap.values()].map(iso => iso.slice(0, 7)))];
+    const results = [];
+    for (const month of months) {
+      const url = target.url.replace(/schedule\.html$/, `monthly/schedule_${month.replace('-', '')}.html`);
+      const html = await fetchHtml(url);
+      const monthDates = new Map([...dateMap].filter(([, iso]) => iso.startsWith(month + '-')));
+      results.push(...parseBasket(html, target, monthDates));
+    }
+    return results;
+  }
   const html = await fetchHtml(target.url);
   return target.sport === 'basket' ? parseBasket(html, target, dateMap) : parseSoccer(html, target, dateMap);
 }

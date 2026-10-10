@@ -29,7 +29,8 @@ test('basket targets fetch actual widget HTML, not iframe containers', async () 
   assert.equal((await h.run('fetchTarget(TARGETS[0])')).length, 1);
   await h.run('fetchTarget(TARGETS[2])');
   assert.deepEqual(calls, [
-    'https://sports.yahoo.co.jp/basket/widget/ds/pc/teams/703/schedule.html',
+    'https://sports.yahoo.co.jp/basket/widget/ds/pc/teams/703/monthly/schedule_202609.html',
+    'https://sports.yahoo.co.jp/basket/widget/ds/pc/teams/703/monthly/schedule_202610.html',
     'https://sports.yahoo.co.jp/basket/widget/ds/pc/men/teams/366/schedule.html',
   ]);
 });
@@ -105,4 +106,26 @@ test('missing or malformed manual expectations prevent every write', async () =>
 test('scheduled execution without expectations retains merged saving', async () => {
   const h = guardedMain(undefined, { event: 'schedule' }); await h.run();
   assert.equal(h.writes.length, 1); assert.deepEqual(h.writes[0].options, { merge: true });
+});
+
+
+test('monthly fetching combines September and October without duplicates or future months', async () => {
+  const calls = [];
+  const h = harness(async url => {
+    calls.push(url);
+    return { ok: true, text: async () => basket({ date: '9/26' }) + basket({ date: '10/9' }) + basket({ date: '10/11' }) };
+  });
+  const rows = plain(await h.run('fetchTarget(TARGETS[0])'));
+  assert.deepEqual(rows.map(r => r.key), ['brex_2026-09-26', 'brex_2026-10-09']);
+  assert.equal(calls.length, 2);
+});
+test('months come from registered past dates, including another year', async () => {
+  const calls = [];
+  const h = harness(async url => { calls.push(url); return { ok: true, text: async () => '<table></table>' }; });
+  await h.run("fetchTarget({...TARGETS[0], dates:['2025-12-01','2026-01-02','2026-01-03','2027-01-01']})");
+  assert.deepEqual(calls.map(u => u.split('/').pop()), ['schedule_202512.html', 'schedule_202601.html']);
+});
+test('failed historical month is reported rather than silently returning partial results', async () => {
+  const h = harness(async url => ({ ok: !url.includes('202609'), status: 404, text: async () => basket() }));
+  await assert.rejects(h.run('fetchTarget(TARGETS[0])'), /HTTP 404/);
 });

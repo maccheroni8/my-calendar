@@ -64,8 +64,6 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 .auth-controls button{border:0;border-radius:8px;background:#f5f5f7;color:#1d1d1f;padding:8px;font:inherit;cursor:pointer}
 .auth-controls button:disabled{opacity:.5;cursor:default}
 .auth-status{overflow-wrap:anywhere}
-.auth-uid{flex-basis:100%;min-width:0}
-.auth-uid input{width:100%;min-width:0;font:inherit;padding:6px;border:1px solid #d2d2d7;border-radius:6px}
 .view-toggle-btn{width:34px;height:34px;border-radius:10px;border:none;background:#f5f5f7;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;font-size:16px}
 .view-toggle-btn:hover{background:#eee}
 .view-toggle-btn svg.ic{margin-right:0}
@@ -289,7 +287,6 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 <div class="wrap">
   <!-- sync bar (mobile only) -->
   <div class="sync-bar">
-    <span>☁️ クラウド同期</span>
     <span class="sync-status loading" id="sync-status" role="status" aria-live="polite">認証確認中…</span>
     <button type="button" id="sync-retry" hidden>保存を再試行</button>
     <button type="button" id="sync-reload" hidden>再読み込み</button>
@@ -329,8 +326,6 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
         <span class="auth-status" id="auth-status" role="status" aria-live="polite">認証確認中…</span>
         <button type="button" id="auth-login" disabled>Googleでログイン</button>
         <button type="button" id="auth-logout" hidden disabled>ログアウト</button>
-        <button type="button" id="auth-uid-toggle" aria-expanded="false" aria-controls="auth-uid-panel" hidden>UIDを確認</button>
-        <label class="auth-uid" id="auth-uid-panel" hidden>UID <input id="auth-uid" readonly></label>
       </div>
       <div class="chip add-btn icon-only" onclick="openAddModal()" title="試合を追加">＋</div>
       <div style="display:flex;gap:6px;align-items:center">
@@ -385,7 +380,7 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
   </div>
   <div class="mark-btn clear" onclick="setMarkAction(null)">✕ マークを消す</div>
   <div class="memo-sec">
-    <div class="memo-lbl"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/><path d="M14 7l3 3"/></svg> メモ <span class="memo-tag" id="memo-tag">保存しました ✓</span></div>
+    <div class="memo-lbl"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/><path d="M14 7l3 3"/></svg> メモ <span class="memo-tag" id="memo-tag">保存済み</span></div>
     <textarea class="memo-ta" id="memo-ta" placeholder="席、一緒に行く人、持ち物など…"></textarea>
     <div class="memo-row">
       <button class="memo-save" id="memo-save" onclick="saveMemo()"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11M8.5 10.5L12 14l3.5-3.5"/><path d="M5 15v3a2 2 0 002 2h10a2 2 0 002-2v-3"/></svg> メモを保存</button>
@@ -473,17 +468,11 @@ let authUser=null,authReady=false,authBusy=false,authMessage='';
 const authStatus=document.getElementById('auth-status');
 const authLogin=document.getElementById('auth-login');
 const authLogout=document.getElementById('auth-logout');
-const authUidToggle=document.getElementById('auth-uid-toggle');
-const authUidPanel=document.getElementById('auth-uid-panel');
-const authUid=document.getElementById('auth-uid');
-function hideAuthUid(){
-  authUidPanel.hidden=true;authUid.value='';
-  authUidToggle.textContent='UIDを確認';authUidToggle.setAttribute('aria-expanded','false');
-}
 function renderAuth(){
-  authStatus.textContent=authMessage||(!authReady?'認証確認中…':authUser?'ログイン済み':'未ログイン');
-  authLogin.hidden=!!authUser;authLogout.hidden=!authUser;authUidToggle.hidden=!authUser;
-  authLogin.disabled=authLogout.disabled=authUidToggle.disabled=!authReady||authBusy;
+  authStatus.textContent=authMessage||(!authReady?'認証確認中…':authUser?'':'未ログイン');
+  authStatus.hidden=!authStatus.textContent;
+  authLogin.hidden=!!authUser;authLogout.hidden=!authUser;
+  authLogin.disabled=authLogout.disabled=!authReady||authBusy;
 }
 function authErrorMessage(error){
   switch(error.code){
@@ -497,7 +486,7 @@ function authErrorMessage(error){
 }
 authLogin.addEventListener('click',async()=>{
   if(!authReady||authBusy||auth.currentUser)return;
-  authBusy=true;authMessage='ログイン中…';hideAuthUid();renderAuth();
+  authBusy=true;authMessage='ログイン中…';renderAuth();
   try{await signInWithPopup(auth,googleProvider);authMessage='';}
   catch(error){authMessage=authErrorMessage(error);}
   finally{authBusy=false;renderAuth();}
@@ -506,7 +495,7 @@ authLogout.addEventListener('click',async()=>{
   if(!authReady||authBusy||!auth.currentUser)return;
   if(hasDraft()&&!confirm('入力途中のメモ・追加フォームを破棄してログアウトしますか？'))return;
   const session=dataSession;
-  loggingOut=true;authBusy=true;authMessage='保存を確認中…';hideAuthUid();renderAuth();updateEditControls();
+  loggingOut=true;authBusy=true;authMessage='保存を確認中…';renderAuth();updateEditControls();
   try{
     clearTimeout(saveTimer);saveTimer=null;
     if(savePromise&&!(await saveToFirebase())){authMessage='保存できないためログアウトを中止しました';return;}
@@ -517,12 +506,6 @@ authLogout.addEventListener('click',async()=>{
   }
   catch(error){authMessage=authErrorMessage(error);}
   finally{loggingOut=false;authBusy=false;renderAuth();updateEditControls();}
-});
-authUidToggle.addEventListener('click',()=>{
-  if(!authReady||authBusy||!authUser||authUser.uid!==auth.currentUser?.uid)return;
-  if(!authUidPanel.hidden){hideAuthUid();return;}
-  authUid.value=authUser.uid;authUidPanel.hidden=false;
-  authUidToggle.textContent='UIDを閉じる';authUidToggle.setAttribute('aria-expanded','true');
 });
 // ── アイコン（絵文字の代わりの線画SVG） ──
 const ICO_PATHS={
@@ -746,7 +729,7 @@ function receiveUserData(snap,session){
   if(!hasUnsaved()){
     marks=structuredClone(d.marks);memos=structuredClone(d.memos);customGames=structuredClone(d.customGames);renderCurrent();
   }
-  setSyncStatus(hasUnsaved()?'未保存の変更があります。「保存を再試行」を押してください':'同期済み ✓',hasUnsaved()?'err':'ok');
+  setSyncStatus(hasUnsaved()?'未保存の変更があります。「保存を再試行」を押してください':'保存済み',hasUnsaved()?'err':'ok');
 }
 function startPersonalData(){
   stopPersonalData();
@@ -782,7 +765,7 @@ async function saveToFirebase(){
       if(session!==dataSession||!isOwner())return false;
       serverData=payload;savedRevision=revision;
       if(dataBlocked)return false;
-      setSyncStatus(hasUnsaved()?'未保存の変更があります':'保存しました ✓',hasUnsaved()?'loading':'ok');
+      setSyncStatus(hasUnsaved()?'未保存の変更があります':'保存済み',hasUnsaved()?'loading':'ok');
       return true;
     }catch(error){
       if(session!==dataSession||!isOwner())return false;
@@ -1317,10 +1300,10 @@ if(curY>2027||(curY===2027&&curM>6)){curY=2027;curM=6;}
 renderCal(); // Firebase接続前に即描画
 updateEditControls();
 onAuthStateChanged(auth,user=>{
-  authUser=user;authReady=true;authMessage='';hideAuthUid();renderAuth();startPersonalData();
+  authUser=user;authReady=true;authMessage='';renderAuth();startPersonalData();
 },()=>{
   authUser=null;authReady=false;authMessage='認証状態を確認できません。再読み込みしてください';
-  hideAuthUid();renderAuth();stopPersonalData();setSyncStatus('認証エラー：個人データへのアクセス停止','err');
+  renderAuth();stopPersonalData();setSyncStatus('認証エラー：個人データへのアクセス停止','err');
 });
 </script>
 </body>

@@ -13,7 +13,7 @@ import { BREX, CEREZO, JAPAN } from '../data.js';
 const TARGETS = [
   {
     key: 'brex',
-    url: 'https://sports.yahoo.co.jp/basket/bleague/b1/teams/703/schedule',
+    url: 'https://sports.yahoo.co.jp/basket/widget/ds/pc/teams/703/schedule.html',
     sport: 'basket',
     teamName: '宇都宮',
     dates: BREX.map(e => e.d),
@@ -27,7 +27,7 @@ const TARGETS = [
   },
   {
     key: 'japan_basket',
-    url: 'https://sports.yahoo.co.jp/basket/japan/men/teams/366/schedule',
+    url: 'https://sports.yahoo.co.jp/basket/widget/ds/pc/men/teams/366/schedule.html',
     sport: 'basket',
     teamName: '日本',
     dates: JAPAN.filter(e => e.sport === 'basket').map(e => e.d),
@@ -144,20 +144,36 @@ async function fetchTarget(target) {
 }
 
 async function main() {
+  const expectedJson = process.env.EXPECTED_COUNTS;
+  if (process.env.GITHUB_EVENT_NAME === 'workflow_dispatch' && !expectedJson) {
+    throw new Error('手動実行には期待件数が必要です（保存中止）');
+  }
+  const expected = expectedJson ? JSON.parse(expectedJson) : null;
+  if (expectedJson && (!expected || Array.isArray(expected) ||
+      Object.keys(expected).length !== TARGETS.length ||
+      TARGETS.some(t => !Number.isSafeInteger(expected[t.key]) || expected[t.key] < 0))) {
+    throw new Error('期待件数は全4チームの非負整数を指定してください（保存中止）');
+  }
   const svcJson = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (!svcJson) throw new Error('FIREBASE_SERVICE_ACCOUNT環境変数が設定されていません');
   initializeApp({ credential: cert(JSON.parse(svcJson)) });
   const db = getFirestore();
 
   const all = [];
+  const counts = {};
   for (const target of TARGETS) {
     try {
       const rows = await fetchTarget(target);
       console.log(`[${target.key}] ${rows.length}件の終了試合を検出`);
+      counts[target.key] = rows.length;
       all.push(...rows);
     } catch (e) {
       console.error(`[${target.key}] 取得失敗:`, e.message);
     }
+  }
+
+  if (expected && TARGETS.some(t => counts[t.key] !== expected[t.key])) {
+    throw new Error(`取得件数が期待値と一致しません（保存中止）: ${JSON.stringify(counts)}`);
   }
 
   if (all.length === 0) {

@@ -15,11 +15,11 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'Plus Jakarta Sans','Helvetica Neue',Arial,'Hiragino Sans',sans-serif;-webkit-font-smoothing:antialiased;background:#fbfbfd;color:#1d1d1f;min-height:100vh;padding:12px 16px}
-.wrap{max-width:100%;margin:0 auto}
+.wrap{position:relative;max-width:100%;margin:0 auto}
 svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px}
 
-/* sync bar - 全デバイスで非表示 */
-.sync-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;font-size:11px}
+/* 保存状態と操作ボタン */
+.sync-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:44px;padding-right:340px;margin-bottom:8px;font-size:11px}
 .sync-bar button{font:inherit;padding:5px 8px;border:0;border-radius:6px;cursor:pointer}
 [aria-disabled="true"]{opacity:.5;pointer-events:none}
 
@@ -32,6 +32,10 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 /* ── ツールバー（PC）── */
 .toolbar{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:12px;display:flex;flex-direction:row;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .toolbar-left{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+@media(min-width:601px){
+  .toolbar-left{flex:1}
+  .toolbar-left>.mf-btn.all{margin-left:auto}
+}
 .toolbar-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px 6px 7px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:2px solid transparent;transition:all .15s;user-select:none;flex-shrink:0}
 .chip-logo{width:18px;height:18px;object-fit:contain;border-radius:6px;background:#fff;flex-shrink:0}
@@ -59,7 +63,12 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 .mf-btn.maybe.active{background:#f59e0b;color:#fff;border-color:#f59e0b}
 .mf-btn.price{background:#ede9fe;color:#5b21b6;border-color:#c4b5fd}
 .mf-btn.price.active{background:#a78bfa;color:#fff;border-color:#a78bfa}
-.toolbar-right{display:flex;align-items:center;gap:6px;justify-content:space-between;flex-wrap:wrap}
+.toolbar-right{position:absolute;top:0;right:0;display:flex;align-items:center;gap:6px;justify-content:flex-end;flex-wrap:nowrap;max-width:calc(100% - 80px)}
+.toolbar-right .auth-controls{order:3;justify-content:flex-end}
+.toolbar-right>.add-btn{order:1}
+.toolbar-view-controls{order:2;flex-shrink:0}
+.toolbar-right>.chip.add-btn.icon-only,.toolbar-view-controls>.view-toggle-btn{width:44px;height:44px}
+.auth-controls button,.layout-btn{height:44px}
 .auth-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0;max-width:100%;font-size:11px;color:#6e6e73}
 .auth-controls button{border:0;border-radius:8px;background:#f5f5f7;color:#1d1d1f;padding:8px;font:inherit;cursor:pointer}
 .auth-controls button:disabled{opacity:.5;cursor:default}
@@ -235,18 +244,19 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 @media(max-width:600px){
   body{padding:8px}
   h1{font-size:12px}
-  .sync-bar{display:flex}
+  .sync-bar{padding-right:190px}
   .layout-toggle{display:none}
 
   /* PCツールバー行を非表示、スマホ行を表示 */
   .toolbar{flex-direction:column;align-items:stretch;padding:8px 10px;gap:6px}
   .toolbar-left{display:none}
-  #mob-team-row{display:grid!important;grid-template-columns:repeat(6,1fr);gap:4px}
+  #mob-team-row{display:grid!important;grid-column:1 / -1;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
   #mob-team-row .chip{flex-direction:column;padding:6px 2px;font-size:9px;justify-content:center;border-radius:7px;gap:3px;white-space:nowrap}
   #mob-team-row .chip-logo{width:16px;height:16px}
-  #mob-mark-row{display:grid!important;grid-template-columns:repeat(4,1fr);gap:4px}
+  #mob-mark-row{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
   #mob-mark-row .mf-btn{flex-direction:column;padding:6px 2px;font-size:10px;text-align:center;border-radius:7px;gap:3px}
-  .toolbar-right{justify-content:space-between}
+  #mob-mark-row .mf-btn{min-width:0;white-space:nowrap;justify-content:center}
+  #mob-team-row .chip,#mob-mark-row .mf-btn,.toolbar-right>.add-btn,.toolbar-view-controls>.view-toggle-btn,.auth-controls button{height:44px;box-sizing:border-box}
 
   /* カレンダー横スクロール（スマホのみ有効化） */
   .cal-scroll-wrap{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -8px;padding:0 8px}
@@ -328,7 +338,7 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
         <button type="button" id="auth-logout" hidden disabled>ログアウト</button>
       </div>
       <div class="chip add-btn icon-only" onclick="openAddModal()" title="試合を追加">＋</div>
-      <div style="display:flex;gap:6px;align-items:center">
+      <div class="toolbar-view-controls" style="display:flex;gap:6px;align-items:center">
         <div class="layout-toggle" id="layout-wrap" style="display:none">
           <button class="layout-btn active" id="lb-vert" onclick="setLayout('vert')">≡ 縦</button>
           <button class="layout-btn" id="lb-hori" onclick="setLayout('hori')">⊞ 横</button>

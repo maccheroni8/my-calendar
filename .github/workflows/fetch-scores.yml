@@ -1,5 +1,8 @@
 name: Fetch scores
 
+permissions:
+  contents: read
+
 on:
   schedule:
     # 毎日 0:10 JST (= 15:10 UTC 前日)
@@ -15,13 +18,16 @@ jobs:
   fetch-scores:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
         with:
-          node-version: '20'
+          persist-credentials: false
 
-      - run: npm ci
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.22.1'
+          package-manager-cache: false
+
+      - run: npm ci --ignore-scripts
 
       - run: npm run fetch-scores
         env:

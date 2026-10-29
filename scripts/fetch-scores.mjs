@@ -1,5 +1,5 @@
 // Yahoo!スポーツナビのチームスケジュールページから終了試合のスコアを取得し、
-// Firestore (calendar/scores) に書き込む。GitHub Actionsから毎日実行される想定。
+// サッカーの確定カードも取得し、Firestore (calendar/scores) に書き込む。GitHub Actionsから毎日実行される想定。
 //
 // Yahoo側の表には月日(M/D)しか無く年が明示されないため、自前の data.js
 // (index.html と共有) にある試合日程の「今日以前の日付」とだけ月日で突き合わせる。
@@ -9,6 +9,8 @@ import * as cheerio from 'cheerio';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { BREX, CEREZO, JAPAN } from '../data.js';
+import { applyFixture } from '../schedule.js';
+import { parseFixtures } from './parse-fixtures.mjs';
 
 const TARGETS = [
   {
@@ -137,7 +139,16 @@ function parseSoccer(html, target, dateMap) {
   return results;
 }
 
-async function fetchTarget(target) {
+async function fetchTarget(target, fixtures = {}) {
+  if (target.sport === 'soccer') {
+    const html = await fetchHtml(target.url);
+    const updates = parseFixtures(html, target);
+    Object.assign(fixtures, updates);
+    const dates = target.key === 'cerezo'
+      ? CEREZO.map((e, i) => applyFixture(e, 'cerezo', i, updates).d)
+      : target.dates;
+    return parseSoccer(html, target, buildDateMap(dates));
+  }
   const dateMap = buildDateMap(target.dates);
   if (dateMap.size === 0) return [];
   if (target.monthly) {
@@ -172,10 +183,11 @@ async function main() {
   const db = getFirestore();
 
   const all = [];
+  const fixtures = {};
   const counts = {};
   for (const target of TARGETS) {
     try {
-      const rows = await fetchTarget(target);
+      const rows = await fetchTarget(target, fixtures);
       console.log(`[${target.key}] ${rows.length}件の終了試合を検出`);
       counts[target.key] = rows.length;
       all.push(...rows);
@@ -188,7 +200,7 @@ async function main() {
     throw new Error(`取得件数が期待値と一致しません（保存中止）: ${JSON.stringify(counts)}`);
   }
 
-  if (all.length === 0) {
+  if (all.length === 0 && Object.keys(fixtures).length === 0) {
     console.log('書き込み対象なし');
     return;
   }
@@ -198,8 +210,8 @@ async function main() {
     results[r.key] = { result: r.result, myScore: r.myScore, opScore: r.opScore, updatedAt: new Date().toISOString() };
   }
 
-  await db.doc('calendar/scores').set({ results }, { merge: true });
-  console.log(`Firestoreに${all.length}件書き込みました`);
+  await db.doc('calendar/scores').set({ results, fixtures }, { merge: true });
+  console.log(`Firestoreにスコア${all.length}件・確定カード${Object.keys(fixtures).length}件を書き込みました`);
 }
 
 main().catch((e) => {

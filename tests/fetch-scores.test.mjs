@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import * as cheerio from 'cheerio';
 import { BREX, CEREZO, JAPAN } from '../data.js';
+import { applyFixture } from '../schedule.js';
+import { parseFixtures } from '../scripts/parse-fixtures.mjs';
 
 // Evaluate declarations only: no Admin SDK imports or production main() call.
 const source = readFileSync(new URL('../scripts/fetch-scores.mjs', import.meta.url), 'utf8');
@@ -11,7 +13,7 @@ function harness(fetch = () => { throw new Error('Network disabled'); }) {
   class FixedDate extends Date {
     constructor(...args) { super(...(args.length ? args : ['2026-10-10T00:00:00Z'])); }
   }
-  const context = vm.createContext({ cheerio, BREX, CEREZO, JAPAN, Date: FixedDate, fetch });
+  const context = vm.createContext({ cheerio, BREX, CEREZO, JAPAN, applyFixture, parseFixtures, Date: FixedDate, fetch });
   vm.runInContext(source.slice(source.indexOf('const TARGETS'), source.indexOf('async function main')), context);
   return { context, run: code => vm.runInContext(code, context) };
 }
@@ -128,4 +130,23 @@ test('months come from registered past dates, including another year', async () 
 test('failed historical month is reported rather than silently returning partial results', async () => {
   const h = harness(async url => ({ ok: !url.includes('202609'), status: 404, text: async () => basket() }));
   await assert.rejects(h.run('fetchTarget(TARGETS[0])'), /HTTP 404/);
+});
+
+test('future fixture metadata is saved even when there are no completed games', async () => {
+  const h = harness(); const writes = [];
+  Object.assign(h.context, { process: { env: { FIREBASE_SERVICE_ACCOUNT: '{}' } }, initializeApp() {}, cert: v => v, getFirestore: () => ({ doc() { return { set: async (data, options) => writes.push(plain({ data, options })) }; } }), console: { log() {}, error() {} } });
+  vm.runInContext(source.slice(source.indexOf('async function main'), source.lastIndexOf('main().catch')), h.context);
+  vm.runInContext("fetchTarget=async (target, fixtures)=>{if(target.key==='cerezo')fixtures.cerezo_17={d:'2026-11-11',op:'浦和',h:false};return []}", h.context);
+  await h.run('main()');
+  assert.equal(writes.length, 1);
+  assert.equal(writes[0].data.fixtures.cerezo_17.op, '浦和');
+  assert.deepEqual(writes[0].data.results, {});
+  assert.deepEqual(writes[0].options, { merge: true });
+});
+
+test('rescheduled cup score is fetched at its confirmed date together with its fixture', async () => {
+  const html = `<table><tr><td class="sc-tableGame__data--date">10/7（水）<br>18:30</td><td class="sc-tableGame__data--category">天皇杯3回戦</td><td class="sc-tableGame__data--victory">○</td><td class="sc-tableGame__data--team">C大阪</td><td><a class="sc-tableGame__score" href="https://soccer.yahoo.co.jp/jleague/game/2026100712"><span class="sc-tableGame__scoreDetail">2 - 0</span><span class="sc-tableGame__status">試合終了</span></a></td><td class="sc-tableGame__data--team">鹿児島</td></tr></table>`;
+  const h=harness(async()=>({ok:true,text:async()=>html}));
+  const rows=plain(await h.run('fetchTarget(TARGETS[1])'));
+  assert.deepEqual(rows,[{key:'cerezo_2026-10-07',result:'win',myScore:2,opScore:0}]);
 });

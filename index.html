@@ -125,6 +125,7 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 .badge-score{font-size:7px;flex-shrink:0;border-radius:2px;padding:0 2px;font-weight:700;white-space:nowrap}
 .bdg-win{background:#0ea5e9;color:#fff}.bdg-lose{background:#94a3b8;color:#fff}.bdg-draw{background:#cbd5e1;color:#333}
 /* スマホカレンダー内ロゴ */
+.ev-label{min-width:0;overflow-wrap:anywhere}
 .ev-logo{width:20px;height:20px;object-fit:contain;vertical-align:middle;flex-shrink:0}
 .ev-abbr{font-size:9px;font-weight:700;vertical-align:middle}
 .ev-vs{font-size:8px;opacity:.8}
@@ -457,6 +458,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getFirestore, doc, runTransaction, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { BREX, CEREZO, JAPAN } from './data.js';
+import { applyFixture } from './schedule.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB0qDyXvOlXRmNhYytevAvrTLh2ZNZ5rIQ",
@@ -653,7 +655,7 @@ function cupIcon(cupName,team){
 // ── 状態 ──
 const DOW=['月','火','水','木','金','土','日'];
 const ML=['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-let marks={}, memos={}, customGames=[], scores={};
+let marks={}, memos={}, customGames=[], scores={}, fixtures={};
 let showBrex=true,showCerezo=true,showJapanBasket=true,showJapanSoccer=true,showCustom=true;
 let mf=[], curView='cal', layout='vert';
 let curY=2026, curM=8;
@@ -752,6 +754,7 @@ function startPersonalData(){
 }
 onSnapshot(SCORES_REF,(snap)=>{
   scores=(snap.exists()&&snap.data().results)||{};
+  fixtures=(snap.exists()&&snap.data().fixtures)||{};
   renderCurrent();
 },()=>{});
 async function saveToFirebase(){
@@ -839,15 +842,20 @@ function scoreCls(s){return s.result==='win'?'win':s.result==='lose'?'lose':'dra
 
 // ── イベント一覧 ──
 function passMF(mv){return mf.length===0||mv.some(v=>mf.includes(v));}
+function resolvedEvent(e,team,idx){
+  const ev={...applyFixture(e,team,idx,fixtures),storageDate:e.d};
+  if(team==='cerezo')ev.op=[...J1,...J2,...J3].find(name=>ABBR[name]===ev.op)||ev.op;
+  return ev;
+}
 function allEvs(){
   const evs=[];
   if(showBrex) BREX.forEach((e,i)=>{const mv=getMark('brex',e.d,i);if(passMF(mv))evs.push({...e,team:'brex',idx:i,mv});});
-  if(showCerezo) CEREZO.forEach((e,i)=>{const mv=getMark('cerezo',e.d,i);if(passMF(mv))evs.push({...e,team:'cerezo',idx:i,mv});});
+  if(showCerezo) CEREZO.forEach((e,i)=>{const mv=getMark('cerezo',e.d,i);if(passMF(mv))evs.push({...resolvedEvent(e,'cerezo',i),team:'cerezo',idx:i,mv});});
   JAPAN.forEach((e,i)=>{
     const show=e.sport==='soccer'?showJapanSoccer:showJapanBasket;
     if(!show)return;
     const mv=getMark('japan',e.d,i);
-    if(passMF(mv))evs.push({...e,team:'japan',idx:i,mv});
+    if(passMF(mv))evs.push({...resolvedEvent(e,'japan',i),team:'japan',idx:i,mv});
   });
   if(showCustom) customGames.forEach((e,i)=>{const mv=getMark('custom',e.d,i);if(passMF(mv))evs.push({...e,team:'custom',idx:i,mv,isCustom:true});});
   return evs;
@@ -967,9 +975,9 @@ const TEAM_LOGO={
   'FC町田ゼルビア':'https://www.cerezo.jp/emblem/30532.png',
 };
 
-// ロゴ画像HTML生成（スマホ専用）
-function logoImg(name){
-  const url=Object.hasOwn(TEAM_LOGO,name)?TEAM_LOGO[name]:null;
+// ロゴ画像HTML生成
+function logoImg(name,override){
+  const url=override||(Object.hasOwn(TEAM_LOGO,name)?TEAM_LOGO[name]:null);
   if(!url) return `<span class="ev-abbr">${escapeHTML(abbr(name))}</span>`;
   return `<img class="ev-logo" src="${escapeHTML(url)}" alt="${escapeHTML(abbr(name))}" onerror="this.style.display='none';this.nextSibling.style.display='inline'"><span class="ev-abbr" style="display:none">${escapeHTML(abbr(name))}</span>`;
 }
@@ -977,6 +985,7 @@ function logoImg(name){
 function evLabelMobileHTML(ev,landscape){
   const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.team==='custom'||!!ev.isCustom;
   if(isJP){
+    if(ev.logo)return `<span class="ev-logo-abbr" style="flex-direction:column">${logoImg(ev.op,ev.logo)}<span class="ev-abbr">日本代表</span></span>`;
     const icon=ic(ev.sport==='soccer'?'soccer':'basket');
     if(landscape) return `<span class="ev-logo-abbr">${icon}<span class="ev-abbr"> 日本代表</span></span>`;
     return `<span class="ev-text-wrap">${icon} 日本代表</span>`;
@@ -985,6 +994,7 @@ function evLabelMobileHTML(ev,landscape){
     const icon=ic(cupIcon(ev.cup,ev.team));
     const cupName=cupAbbr(ev.cup);
     const opText=ev.op==='未定（仮）'?'（仮）':abbr(ev.op);
+    if(ev.logo||TEAM_LOGO[ev.op])return `<span class="ev-logo-abbr" style="flex-direction:column">${logoImg(ev.op,ev.logo)}<span class="ev-abbr">${escapeHTML(cupName)}</span></span>`;
     if(landscape) return `<span class="ev-logo-abbr">${icon}<span class="ev-abbr"> ${escapeHTML(cupName)}</span></span>`;
     return `<span class="ev-text-wrap">${icon}${escapeHTML(cupName)}<br>${escapeHTML(opText)}</span>`;
   }
@@ -1013,8 +1023,8 @@ function evLabelMobileHTML(ev,landscape){
 
 function evLabelPC(ev){
   const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.isCustom,isTbd=ev.h===null||ev.h===undefined;
-  if(isJP){const icon=ic(ev.sport==='soccer'?'soccer':'basket');return `${icon}${escapeHTML(ev.competition)}`;}
-  if(isCup){return `${ic('trophy')}${escapeHTML(ev.cup)}`;}
+  if(isJP){const icon=ev.logo?logoImg(ev.op,ev.logo):ic(ev.sport==='soccer'?'soccer':'basket');return `${icon}${escapeHTML(ev.competition)} vs ${escapeHTML(ev.op)}`;}
+  if(isCup){return `${ev.logo?logoImg(ev.op,ev.logo):ic('trophy')}${escapeHTML(ev.cup)} vs ${escapeHTML(ev.op)}`;}
   if(isCustom){const icon=ic(ev.sport==='basket'?'basket':'soccer');const hoa=isTbd?'':(ev.h?'H ':'A ');return `${icon}${hoa}${escapeHTML(ev.op)}`;}
   const icon=ic(ev.team==='brex'?'basket':'soccer');
   const hoa=isTbd?'':(ev.h?'H ':'A ');
@@ -1058,9 +1068,9 @@ function makeCell(y,m,d,other){
     const sc=getScore(ev);
     if(sc){const sb=document.createElement('span');sb.className='badge-score bdg-'+scoreCls(sc);sb.textContent=scoreText(sc);tag.appendChild(sb);}
     // メモバッジはPCのみ表示
-    if(!isMobile()&&getMemo(ev.team,ds,ev.idx)){const m2=document.createElement('span');m2.className='badge';m2.style.cssText='background:#f0e6ff;color:#7c3aed';m2.innerHTML=ic('note',10);tag.appendChild(m2);}
-    const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?ev.op:(ev.cup||ev.op);
-    tag.addEventListener('click',e=>{e.stopPropagation();openPopup(e,ev.team,ds,ev.idx,clickOp,ev.venue||'',ev.isCustom,ev.sport);});
+    if(!isMobile()&&getMemo(ev.team,ev.storageDate||ds,ev.idx)){const m2=document.createElement('span');m2.className='badge';m2.style.cssText='background:#f0e6ff;color:#7c3aed';m2.innerHTML=ic('note',10);tag.appendChild(m2);}
+    const clickOp=isJP?`${ev.competition} vs ${ev.op}`:ev.op;
+    tag.addEventListener('click',e=>{e.stopPropagation();openPopup(e,ev.team,ds,ev.idx,clickOp,ev.venue||'',ev.isCustom,ev.sport,ev.storageDate);});
     cell.appendChild(tag);
   });
   return cell;
@@ -1126,20 +1136,20 @@ function renderList(){
       const markHtml=ev.mv.length?ev.mv.map(v=>`<span class="l-mark lm-${v}">${v==='go'?ic('check',11)+' 行く':v==='maybe'?ic('maybe',11)+' できたら':ic('price',11)+' 値段次第'}</span>`).join(''):`<span class="l-mark lm-none">未定</span>`;
       const sc=getScore(ev);
       const scoreHtml=sc?`<span class="l-score ls-${scoreCls(sc)}">${escapeHTML(scoreText(sc))}</span>`:'';
-      const memo=getMemo(ev.team,ev.d,ev.idx);
+      const memo=getMemo(ev.team,ev.storageDate||ev.d,ev.idx);
       const memoHtml=memo?`<div class="l-memo">${ic('note',11)} ${escapeHTML(memo.slice(0,60))}${memo.length>60?'…':''}</div>`:'';
       const row=document.createElement('div');row.className='list-row';
-      const clickOp=isJP?`${ev.competition} vs ${ev.op}`:isCustom?ev.op:(ev.cup||ev.op);
+      const clickOp=isJP?`${ev.competition} vs ${ev.op}`:ev.op;
       const venueStr=ev.venue||'';
       if(layout==='hori'){
-        row.innerHTML=`<span class="l-date" style="color:${wC};display:block;margin-bottom:4px">${escapeHTML(dateStr)}</span><div style="margin-bottom:4px"><span class="${badgeCl}">${badgeTx}</span></div><div style="font-size:12px;font-weight:500;margin-bottom:2px">${escapeHTML(opTx)}</div><div style="font-size:10px;color:#bbb;margin-bottom:4px">${escapeHTML(venueStr)}</div>${scoreHtml}${markHtml}${memoHtml}`;
+        row.innerHTML=`<span class="l-date" style="color:${wC};display:block;margin-bottom:4px">${escapeHTML(dateStr)}</span><div style="margin-bottom:4px"><span class="${badgeCl}">${badgeTx}</span></div><div style="font-size:12px;font-weight:500;margin-bottom:2px">${ev.logo?logoImg(ev.op,ev.logo)+' ':''}${escapeHTML(opTx)}</div><div style="font-size:10px;color:#bbb;margin-bottom:4px">${escapeHTML(venueStr)}</div>${scoreHtml}${markHtml}${memoHtml}`;
       } else if(isMobile()){
         row.classList.add('mob-card');
-        row.innerHTML=`<div class="mrow-top"><div class="mrow-left"><span class="l-date" style="color:${wC}">${escapeHTML(dateStr)}</span><span class="${badgeCl}">${badgeTx}</span></div><div class="mrow-right">${scoreHtml}${markHtml}</div></div><div class="l-op">${escapeHTML(opTx)}</div><div class="l-venue">${escapeHTML(venueStr)}</div>${memoHtml}`;
+        row.innerHTML=`<div class="mrow-top"><div class="mrow-left"><span class="l-date" style="color:${wC}">${escapeHTML(dateStr)}</span><span class="${badgeCl}">${badgeTx}</span></div><div class="mrow-right">${scoreHtml}${markHtml}</div></div><div class="l-op">${ev.logo?logoImg(ev.op,ev.logo)+' ':''}${escapeHTML(opTx)}</div><div class="l-venue">${escapeHTML(venueStr)}</div>${memoHtml}`;
       } else {
-        row.innerHTML=`<div class="l-date" style="color:${wC}">${escapeHTML(dateStr)}</div><span class="${badgeCl}">${badgeTx}</span><div class="l-op">${escapeHTML(opTx)}</div><div class="l-venue">${escapeHTML(venueStr)}</div>${scoreHtml}${markHtml}${memoHtml}`;
+        row.innerHTML=`<div class="l-date" style="color:${wC}">${escapeHTML(dateStr)}</div><span class="${badgeCl}">${badgeTx}</span><div class="l-op">${ev.logo?logoImg(ev.op,ev.logo)+' ':''}${escapeHTML(opTx)}</div><div class="l-venue">${escapeHTML(venueStr)}</div>${scoreHtml}${markHtml}${memoHtml}`;
       }
-      row.addEventListener('click',e=>openPopup(e,ev.team,ev.d,ev.idx,clickOp,venueStr,ev.isCustom,ev.sport));
+      row.addEventListener('click',e=>openPopup(e,ev.team,ev.d,ev.idx,clickOp,venueStr,ev.isCustom,ev.sport,ev.storageDate));
       rows.appendChild(row);
     });
     msec.appendChild(rows);body.appendChild(msec);
@@ -1147,9 +1157,9 @@ function renderList(){
 }
 
 // ── ポップアップ ──
-function openPopup(e,team,date,idx,op,info,isCustom,sport){
+function openPopup(e,team,date,idx,op,info,isCustom,sport,storageDate=date){
   updateEditControls();
-  popupTarget={team,date,idx,isCustom};
+  popupTarget={team,date:storageDate,idx,isCustom};
   const popup=document.getElementById('popup');
   const tEl=document.getElementById('popup-team');
   // 結果（自動取得・試合終了分のみ）：確定していれば「vs」の代わりにスコアを表示
@@ -1172,9 +1182,12 @@ function openPopup(e,team,date,idx,op,info,isCustom,sport){
     infoEl.append(document.createTextNode(' '+(tm?info.replace(tm[0],'').trim():info)));
     infoEl.style.display='block';
   } else infoEl.style.display='none';
-  const cur=getMark(team,date,idx);
+  const base=team==='cerezo'?CEREZO[idx]:team==='japan'?JAPAN[idx]:null;
+  const ev=base?resolvedEvent(base,team,idx):null;
+  if(ev?.logo)tEl.insertAdjacentHTML('afterbegin',logoImg(ev.op,ev.logo)+' ');
+  const cur=getMark(team,storageDate,idx);
   ['go','maybe','price'].forEach(v=>document.getElementById('mb-'+v).className='mark-btn'+(cur.includes(v)?' active-'+v:''));
-  document.getElementById('memo-ta').value=getMemo(team,date,idx);
+  document.getElementById('memo-ta').value=getMemo(team,storageDate,idx);
   document.getElementById('memo-tag').style.opacity='0';
   document.getElementById('memo-save').className='memo-save'+(team==='cerezo'?' cerezo':team==='japan'?(sport==='soccer'?' japan-soccer':' japan'):isCustom?' custom':'');
   // 削除ボタン（カスタムのみ表示）

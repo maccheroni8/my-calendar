@@ -847,6 +847,8 @@ function passMF(mv){return mf.length===0||mv.some(v=>mf.includes(v));}
 function resolvedEvent(e,team,idx){
   const ev={...applyFixture(e,team,idx,fixtures),storageDate:e.d};
   if(team==='cerezo')ev.op=[...J1,...J2,...J3].find(name=>ABBR[name]===ev.op)||ev.op;
+  const flag=team==='japan'&&ev.sport==='basket'?({'モンゴル':'mgl','韓国':'kor','サウジアラビア':'ksa','カタール':'qat','インドネシア':'ina','レバノン':'lbn'})[ev.op]:null;
+  if(flag&&!ev.logo)ev.logo=`https://s.yimg.jp/images/sports/all_device/common/images/flag/all/${flag}.svg`;
   return ev;
 }
 function allEvs(){

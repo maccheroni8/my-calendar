@@ -1,0 +1,52 @@
+{
+  "prototype": true,
+  "season": "2025-26",
+  "source": "https://zennihon2025-26.japanbasketball.jp/schedule/fin-round/sexcategory1/",
+  "games": [
+    {
+      "id": "emperors_2025-26_fr_11729",
+      "team": "brex",
+      "d": "2026-01-07",
+      "op": "信州ブレイブウォリアーズ",
+      "h": null,
+      "venue": "代々木1 17:00",
+      "cup": "天皇杯",
+      "source": "https://zennihon2025-26.japanbasketball.jp/boxscore/schedulekey-11729/period-18/",
+      "score": {
+        "myScore": 82,
+        "opScore": 64,
+        "result": "win"
+      }
+    },
+    {
+      "id": "emperors_2025-26_fr_11735",
+      "team": "brex",
+      "d": "2026-01-08",
+      "op": "千葉ジェッツ",
+      "h": null,
+      "venue": "代々木1 17:00",
+      "cup": "天皇杯",
+      "source": "https://zennihon2025-26.japanbasketball.jp/boxscore/schedulekey-11735/period-18/",
+      "score": {
+        "myScore": 71,
+        "opScore": 66,
+        "result": "win"
+      }
+    },
+    {
+      "id": "emperors_2025-26_fr_11738",
+      "team": "brex",
+      "d": "2026-01-10",
+      "op": "シーホース三河",
+      "h": null,
+      "venue": "代々木1 16:00",
+      "cup": "天皇杯",
+      "source": "https://zennihon2025-26.japanbasketball.jp/boxscore/schedulekey-11738/period-18/",
+      "score": {
+        "myScore": 53,
+        "opScore": 71,
+        "result": "lose"
+      }
+    }
+  ]
+}

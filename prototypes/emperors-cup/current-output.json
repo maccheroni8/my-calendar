@@ -1,0 +1,21 @@
+{
+  "prototype": true,
+  "season": "2026-27",
+  "source": "https://zennihon.japanbasketball.jp/2026-27/schedule/final/",
+  "scannedGames": 46,
+  "games": [
+    {
+      "id": "emperors_2026-27_final_M11",
+      "sourceId": "plan-final-male-M11",
+      "team": "brex",
+      "d": "2027-01-06",
+      "op": "M3 の勝者",
+      "h": null,
+      "venue": "国立代々木競技場第二体育館 14:00",
+      "cup": "天皇杯 2回戦",
+      "provisional": true,
+      "opponentPending": true,
+      "source": "https://zennihon.japanbasketball.jp/2026-27/schedule/final/"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 本番未接続。Firebase SDK・認証情報・ネットワーク取得を含まない、保存済みHTMLからローカルJSONを作る試作。既存アプリ、data.js、Actionsは変更していない。
 
-## 調査結果
+## 初回調査結果（下記の新サイト調査で更新）
 
 - JBAは公式サイトの閲覧障害を案内しており、今季の天皇杯セカンドラウンドの組み合わせ・結果は各ブロック協会のサイトを参照するよう案内している。
   https://japanbasketball.jp/
@@ -51,3 +51,27 @@ node prototypes/emperors-cup/run.mjs prototypes/emperors-cup/reference-fragment.
 5. 保存を伴わないプレビューをユーザーが確認してから、本番への書き込みと公開を別途判断する。
 
 自動チェック4件は通過。ユーザーによる実行・出力確認は未実施。本番の動作確認を完了したものではない。
+
+## 新サイト対応（2026-11-05追記、現時点の結果）
+
+ユーザーから今大会のURL提供を受け、下記ページを実際に取得した。初回調査の「今季の個別日程ページは未確認」という状況は解消した。
+
+- セカンドラウンド：https://zennihon.japanbasketball.jp/2026-27/schedule/r2/
+- ファイナルラウンド：https://zennihon.japanbasketball.jp/2026-27/schedule/final/
+
+新サイトは旧サイトと構造が異なり、HTML内のNext.jsのJSONストリームに全日程データを保持している。画面に初期表示される日だけを拾うと取りこぼすため、JavaScriptを実行せずJSON部分だけを読み取る parse-current.mjs を追加した。公開APIとして保証された形式ではないため、構造変更時は取得を停止して確認する。
+
+取得時点で、2Rは125試合中ブレックス0件、FRは46試合中ブレックス1件。FRの内容は2027年1月6日14:00、国立代々木競技場第二体育館、天皇杯2回戦、相手は「M3 の勝者」。公式データ上もplanned=trueの予定カードで、相手・結果は未確定。勝ち上がり後の試合をブレックスの試合として先行登録しない。
+
+current-output.json が今大会の抽出結果。current-reference.json は公式埋め込みデータから対象カードとラウンド定義だけを抜粋した検証材料。旧sample-output.jsonは前回大会のまま残している。
+
+新形式の再実行（事前に公式ページHTMLを入力パスへ保存）：
+
+```sh
+node prototypes/emperors-cup/run-current.mjs /tmp/emperors-current-final.html https://zennihon.japanbasketball.jp/2026-27/schedule/final/ /tmp/emperors-current-output.json
+node --test prototypes/emperors-cup/parse.test.mjs prototypes/emperors-cup/parse-current.test.mjs
+```
+
+新形式のテスト5件と旧形式4件が通過。実ページの全HTMLでも上記件数とカードを抽出した。終了スコアは想定データで検証しており、今季ブレックスの終了試合では未検証。実際に予定カードが正式試合へ変わる際、matchCode（M11など）が維持されるかは未確認。暫定的に大会年度＋stage＋matchCodeを優先し、元のsourceIdも保持している。正式カードの掲載時に対応を再確認する必要がある。
+
+新形式もローカルJSON出力のみ。本番保存・毎日の取得・画面表示には未接続。これらを実装するまでは、公式サイトの更新はカレンダーへ自動反映されない。

@@ -6,6 +6,7 @@ import * as cheerio from 'cheerio';
 import { BREX, CEREZO, JAPAN } from '../data.js';
 import { applyFixture } from '../schedule.js';
 import { parseFixtures } from '../scripts/parse-fixtures.mjs';
+import { parseSoccerCupResults } from '../scripts/parse-cup-results.mjs';
 
 // Evaluate declarations only: no Admin SDK imports or production main() call.
 const source = readFileSync(new URL('../scripts/fetch-scores.mjs', import.meta.url), 'utf8');
@@ -13,8 +14,9 @@ function harness(fetch = () => { throw new Error('Network disabled'); }) {
   class FixedDate extends Date {
     constructor(...args) { super(...(args.length ? args : ['2026-10-10T00:00:00Z'])); }
   }
-  const context = vm.createContext({ cheerio, BREX, CEREZO, JAPAN, applyFixture, parseFixtures, Date: FixedDate, fetch });
+  const context = vm.createContext({ cheerio, BREX, CEREZO, JAPAN, applyFixture, parseFixtures, parseSoccerCupResults, Date: FixedDate, fetch });
   vm.runInContext(source.slice(source.indexOf('const TARGETS'), source.indexOf('async function main')), context);
+  vm.runInContext('fetchBasketFixtures=async()=>({})', context);
   return { context, run: code => vm.runInContext(code, context) };
 }
 function basket({ date = '10/9', home = '茨城', away = '宇都宮', a = 79, b = 90, status = '試合終了', result = 'win' } = {}) {
@@ -59,7 +61,7 @@ test('soccer parsing and fetch URL remain unchanged', async () => {
 });
 test('application score lookup resolves basketball output', () => {
   const source = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-  const context = vm.createContext({ scores: { brex_2026_ignored: null, 'brex_2026-10-09': parse(basket())[0] } });
+  const context = vm.createContext({ BREX, scores: { brex_2026_ignored: null, 'brex_2026-10-09': parse(basket())[0] } });
   vm.runInContext(source.slice(source.indexOf('function scoreTeamKey('), source.indexOf('function scoreCls(')), context);
   assert.equal(vm.runInContext("scoreText(getScore({team:'brex',d:'2026-10-09'}))", context), '○90-79');
 });
@@ -140,7 +142,7 @@ test('future fixture metadata is saved even when there are no completed games', 
   await h.run('main()');
   assert.equal(writes.length, 1);
   assert.equal(writes[0].data.fixtures.cerezo_17.op, '浦和');
-  assert.deepEqual(writes[0].data.results, {});
+  assert.equal(writes[0].data.results, undefined);
   assert.deepEqual(writes[0].options, { merge: true });
 });
 
@@ -149,4 +151,21 @@ test('rescheduled cup score is fetched at its confirmed date together with its f
   const h=harness(async()=>({ok:true,text:async()=>html}));
   const rows=plain(await h.run('fetchTarget(TARGETS[1])'));
   assert.deepEqual(rows,[{key:'cerezo_2026-10-07',result:'win',myScore:2,opScore:0}]);
+});
+
+test('basket fixtures and elimination states merge without empty maps erasing other data', async () => {
+  const h=harness(),writes=[];
+  Object.assign(h.context,{process:{env:{FIREBASE_SERVICE_ACCOUNT:'{}'}},initializeApp(){},cert:v=>v,getFirestore:()=>({doc(path){assert.equal(path,'calendar/scores');return{set:async(data,options)=>writes.push(plain({data,options}))};}}),console:{log(){},error(){}}});
+  vm.runInContext(source.slice(source.indexOf('async function main'),source.lastIndexOf('main().catch')),h.context);
+  vm.runInContext("fetchTarget=async(target,fixtures,states)=>{if(target.key==='cerezo')states.cerezo_emperor={eliminated:true,afterRound:16};return []};fetchBasketFixtures=async()=>({brex_65:{hidden:true}})",h.context);
+  await h.run('main()');
+  assert.equal(writes.length,1);assert.equal(writes[0].data.fixtures.brex_65.hidden,true);assert.equal(writes[0].data.cupStates.cerezo_emperor.eliminated,true);
+  assert.equal('results' in writes[0].data,false);assert.deepEqual(writes[0].options,{merge:true});
+});
+test('failed basket source does not clear saved fixtures or stop ordinary score updates',async()=>{
+  const h=harness(),writes=[];
+  Object.assign(h.context,{process:{env:{FIREBASE_SERVICE_ACCOUNT:'{}'}},initializeApp(){},cert:v=>v,getFirestore:()=>({doc(){return{set:async data=>writes.push(plain(data))};}}),console:{log(){},error(){}}});
+  vm.runInContext(source.slice(source.indexOf('async function main'),source.lastIndexOf('main().catch')),h.context);
+  vm.runInContext("fetchTarget=async target=>target.key==='brex'?[{key:'brex_2026-10-09',result:'win',myScore:90,opScore:79}]:[];fetchBasketFixtures=async()=>{throw Error('HTTP 503')}",h.context);
+  await h.run('main()');assert.equal(writes.length,1);assert.ok(writes[0].results);assert.equal('fixtures' in writes[0],false);assert.equal('cupStates' in writes[0],false);
 });

@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { CEREZO, JAPAN, BREX } from '../data.js';
 import { applyFixture } from '../schedule.js';
+import { cupVisible } from '../cup-state.js';
 import { parseFixtures } from '../scripts/parse-fixtures.mjs';
 const target = { key: 'cerezo', teamName: 'C大阪' };
 function row({ date='2026100712', category='天皇杯3回戦', home='C大阪', away='鹿児島', logo='jleague31042' }={}) {
@@ -37,7 +38,7 @@ test('initial confirmations survive missing updates; URL validation prevents inj
 });
 test('display date changes preserve filtering, marks, and memo keys in both popup entry points', () => {
   const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-  const ctx=vm.createContext({CEREZO,JAPAN,BREX,applyFixture,fixtures:{},J1:[],J2:[],J3:[],ABBR:{},mf:['go'],showBrex:false,showCerezo:true,showJapanBasket:false,showJapanSoccer:false,showCustom:false,marks:{'cerezo_2026-09-23_46':['go']},memos:{'cerezo_2026-09-23_46':'既存メモ'}});
+  const ctx=vm.createContext({CEREZO,JAPAN,BREX,applyFixture,cupVisible,cupStates:{},fixtures:{},J1:[],J2:[],J3:[],ABBR:{},mf:['go'],showBrex:false,showCerezo:true,showJapanBasket:false,showJapanSoccer:false,showCustom:false,marks:{'cerezo_2026-09-23_46':['go']},memos:{'cerezo_2026-09-23_46':'既存メモ'}});
   vm.runInContext(html.slice(html.indexOf('function mk('),html.indexOf('// ── 日本の祝日')),ctx);
   vm.runInContext(html.slice(html.indexOf('function passMF('),html.indexOf('// ── フィルタ')),ctx);
   assert.equal(vm.runInContext('allEvs()[0].d',ctx),'2026-10-07');

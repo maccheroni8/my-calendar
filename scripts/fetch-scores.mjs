@@ -11,6 +11,8 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { BREX, CEREZO, JAPAN } from '../data.js';
 import { applyFixture } from '../schedule.js';
 import { parseFixtures } from './parse-fixtures.mjs';
+import { parseBasketCup, BASKET_CUP_SOURCE } from './parse-basket-cup.mjs';
+import { parseSoccerCupResults } from './parse-cup-results.mjs';
 
 const TARGETS = [
   {
@@ -19,7 +21,7 @@ const TARGETS = [
     sport: 'basket',
     teamName: '宇都宮',
     monthly: true,
-    dates: BREX.map(e => e.d),
+    dates: BREX.filter(e => !e.cupId).map(e => e.d),
   },
   {
     key: 'cerezo',
@@ -139,11 +141,12 @@ function parseSoccer(html, target, dateMap) {
   return results;
 }
 
-async function fetchTarget(target, fixtures = {}) {
+async function fetchTarget(target, fixtures = {}, cupStates = {}) {
   if (target.sport === 'soccer') {
     const html = await fetchHtml(target.url);
     const updates = parseFixtures(html, target);
     Object.assign(fixtures, updates);
+    if (target.key === 'cerezo') Object.assign(cupStates, parseSoccerCupResults(html));
     const dates = target.key === 'cerezo'
       ? CEREZO.map((e, i) => applyFixture(e, 'cerezo', i, updates).d)
       : target.dates;
@@ -166,6 +169,10 @@ async function fetchTarget(target, fixtures = {}) {
   return target.sport === 'basket' ? parseBasket(html, target, dateMap) : parseSoccer(html, target, dateMap);
 }
 
+async function fetchBasketFixtures() {
+  return parseBasketCup(await fetchHtml(BASKET_CUP_SOURCE), BREX);
+}
+
 async function main() {
   const expectedJson = process.env.EXPECTED_COUNTS;
   if (process.env.GITHUB_EVENT_NAME === 'workflow_dispatch' && !expectedJson) {
@@ -185,9 +192,10 @@ async function main() {
   const all = [];
   const fixtures = {};
   const counts = {};
+  const cupStates = {};
   for (const target of TARGETS) {
     try {
-      const rows = await fetchTarget(target, fixtures);
+      const rows = await fetchTarget(target, fixtures, cupStates);
       console.log(`[${target.key}] ${rows.length}件の終了試合を検出`);
       counts[target.key] = rows.length;
       all.push(...rows);
@@ -200,7 +208,14 @@ async function main() {
     throw new Error(`取得件数が期待値と一致しません（保存中止）: ${JSON.stringify(counts)}`);
   }
 
-  if (all.length === 0 && Object.keys(fixtures).length === 0) {
+  try {
+    Object.assign(fixtures, await fetchBasketFixtures());
+    console.log('天皇杯バスケの予定・結果を取得しました');
+  } catch (error) {
+    console.error('天皇杯バスケの取得失敗（既存情報を維持）:', error.message);
+  }
+
+  if (all.length === 0 && Object.keys(fixtures).length === 0 && Object.keys(cupStates).length === 0) {
     console.log('書き込み対象なし');
     return;
   }
@@ -210,7 +225,11 @@ async function main() {
     results[r.key] = { result: r.result, myScore: r.myScore, opScore: r.opScore, updatedAt: new Date().toISOString() };
   }
 
-  await db.doc('calendar/scores').set({ results, fixtures }, { merge: true });
+  const payload = {};
+  if (Object.keys(results).length) payload.results = results;
+  if (Object.keys(fixtures).length) payload.fixtures = fixtures;
+  if (Object.keys(cupStates).length) payload.cupStates = cupStates;
+  await db.doc('calendar/scores').set(payload, { merge: true });
   console.log(`Firestoreにスコア${all.length}件・確定カード${Object.keys(fixtures).length}件を書き込みました`);
 }
 

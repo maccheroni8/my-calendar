@@ -461,6 +461,7 @@ import { getFirestore, doc, runTransaction, onSnapshot } from 'https://www.gstat
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { BREX, CEREZO, JAPAN } from './data.js';
 import { applyFixture } from './schedule.js';
+import { cupVisible } from './cup-state.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB0qDyXvOlXRmNhYytevAvrTLh2ZNZ5rIQ",
@@ -657,7 +658,7 @@ function cupIcon(cupName,team){
 // ── 状態 ──
 const DOW=['月','火','水','木','金','土','日'];
 const ML=['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-let marks={}, memos={}, customGames=[], scores={}, fixtures={};
+let marks={}, memos={}, customGames=[], scores={}, fixtures={}, cupStates={};
 let showBrex=true,showCerezo=true,showJapanBasket=true,showJapanSoccer=true,showCustom=true;
 let mf=[], curView='cal', layout='vert';
 let curY=2026, curM=8;
@@ -757,6 +758,7 @@ function startPersonalData(){
 onSnapshot(SCORES_REF,(snap)=>{
   scores=(snap.exists()&&snap.data().results)||{};
   fixtures=(snap.exists()&&snap.data().fixtures)||{};
+  cupStates=(snap.exists()&&snap.data().cupStates)||{};
   renderCurrent();
 },()=>{});
 async function saveToFirebase(){
@@ -835,6 +837,7 @@ function scoreTeamKey(ev){
   return null;
 }
 function getScore(ev){
+  if(ev.team==='brex'&&BREX[ev.idx]?.cupId)return resolvedEvent(BREX[ev.idx],'brex',ev.idx).score||null;
   const tk=scoreTeamKey(ev);
   if(!tk)return null;
   return scores[tk+'_'+ev.d]||null;
@@ -853,8 +856,8 @@ function resolvedEvent(e,team,idx){
 }
 function allEvs(){
   const evs=[];
-  if(showBrex) BREX.forEach((e,i)=>{const mv=getMark('brex',e.d,i);if(passMF(mv))evs.push({...e,team:'brex',idx:i,mv});});
-  if(showCerezo) CEREZO.forEach((e,i)=>{const mv=getMark('cerezo',e.d,i);if(passMF(mv))evs.push({...resolvedEvent(e,'cerezo',i),team:'cerezo',idx:i,mv});});
+  if(showBrex) BREX.forEach((e,i)=>{const ev=resolvedEvent(e,'brex',i);if(!cupVisible(ev,'brex',cupStates))return;const mv=getMark('brex',e.d,i);if(passMF(mv))evs.push({...ev,team:'brex',idx:i,mv});});
+  if(showCerezo) CEREZO.forEach((e,i)=>{const ev=resolvedEvent(e,'cerezo',i);if(!cupVisible(ev,'cerezo',cupStates))return;const mv=getMark('cerezo',e.d,i);if(passMF(mv))evs.push({...ev,team:'cerezo',idx:i,mv});});
   JAPAN.forEach((e,i)=>{
     const show=e.sport==='soccer'?showJapanSoccer:showJapanBasket;
     if(!show)return;
@@ -997,7 +1000,7 @@ function evLabelMobileHTML(ev,landscape){
   if(isCup){
     const icon=ic(cupIcon(ev.cup,ev.team));
     const cupName=cupAbbr(ev.cup);
-    const opText=ev.op==='未定（仮）'?'（仮）':abbr(ev.op);
+    const opText=ev.op==='未定（仮）'?'（仮）':abbr(ev.op)+(ev.team==='brex'&&ev.cup.includes('（仮）')?'（仮）':'');
     if(ev.logo||TEAM_LOGO[ev.op])return `<span class="ev-logo-abbr" style="flex-direction:column">${logoImg(ev.op,ev.logo)}<span class="ev-abbr">${escapeHTML(cupName)}</span></span>`;
     if(landscape) return `<span class="ev-logo-abbr">${icon}<span class="ev-abbr"> ${escapeHTML(cupName)}</span></span>`;
     return `<span class="ev-text-wrap">${icon}${escapeHTML(cupName)}<br>${escapeHTML(opText)}</span>`;
@@ -1168,7 +1171,7 @@ function openPopup(e,team,date,idx,op,info,isCustom,sport,storageDate=date){
   const popup=document.getElementById('popup');
   const tEl=document.getElementById('popup-team');
   // 結果（自動取得・試合終了分のみ）：確定していれば「vs」の代わりにスコアを表示
-  const sc=isCustom?null:getScore({team,sport,d:date});
+  const sc=isCustom?null:getScore({team,sport,d:date,idx});
   const vsText=sc?` ${sc.myScore}-${sc.opScore} `:' vs ';
   if(team==='japan'){
     const isSoccer=sport==='soccer';
@@ -1187,8 +1190,9 @@ function openPopup(e,team,date,idx,op,info,isCustom,sport,storageDate=date){
     infoEl.append(document.createTextNode(' '+(tm?info.replace(tm[0],'').trim():info)));
     infoEl.style.display='block';
   } else infoEl.style.display='none';
-  const base=team==='cerezo'?CEREZO[idx]:team==='japan'?JAPAN[idx]:null;
+  const base=team==='brex'?BREX[idx]:team==='cerezo'?CEREZO[idx]:team==='japan'?JAPAN[idx]:null;
   const ev=base?resolvedEvent(base,team,idx):null;
+  if(ev?.conditional){infoEl.appendChild(document.createElement('br'));infoEl.append(document.createTextNode('※勝ち上がった場合の予定'));infoEl.style.display='block';}
   if(ev?.logo)tEl.insertAdjacentHTML('afterbegin',logoImg(ev.op,ev.logo)+' ');
   const cur=getMark(team,storageDate,idx);
   ['go','maybe','price'].forEach(v=>document.getElementById('mb-'+v).className='mark-btn'+(cur.includes(v)?' active-'+v:''));

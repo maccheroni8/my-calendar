@@ -69,6 +69,11 @@ export const BREX=[
   {d:'2027-04-28',h:false,op:'東京サンロッカーズ渋谷',venue:'TOYOTA ARENA TOKYO 19:05'},
   {d:'2027-04-30',h:true,op:'長崎ヴェルカ',venue:'調整中 19:05'},
   {d:'2027-05-02',h:false,op:'アルティーリ千葉',venue:'千葉ポートアリーナ 14:05'},
+  // 天皇杯（勝ち上がった場合の予定。既存の配列位置を維持するため末尾に追加）
+  {d:'2027-01-06',h:null,op:'M3 の勝者',venue:'国立代々木競技場第二体育館 14:00',cup:'天皇杯 2回戦（仮）',cupId:'emperors_2026-27_M11'},
+  {d:'2027-01-08',h:null,op:'M12 の勝者',venue:'国立代々木競技場第一体育館 14:00',cup:'天皇杯 準々決勝（仮）',cupId:'emperors_2026-27_M18'},
+  {d:'2027-01-09',h:null,op:'M17 の勝者',venue:'国立代々木競技場第一体育館 14:00',cup:'天皇杯 準決勝（仮）',cupId:'emperors_2026-27_M21'},
+  {d:'2027-01-11',h:null,op:'M22 の勝者',venue:'国立代々木競技場第一体育館 15:00',cup:'天皇杯 決勝（仮）',cupId:'emperors_2026-27_M23'},
 ];
 export const CEREZO=[
   {d:'2026-08-08',h:true,op:'ファジアーノ岡山',venue:'YANMAR HANASAKA STADIUM 19:00'},

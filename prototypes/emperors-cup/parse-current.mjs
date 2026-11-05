@@ -1,34 +1,9 @@
-import * as cheerio from 'cheerio';
+import { readCurrentCupData } from '../../scripts/parse-basket-cup.mjs';
+
 
 // ページに埋め込まれたJSONのみを読み、取得先のJavaScriptは実行しない。
 export function parseCurrentCup(html, { source, season = '2026-27' }) {
-  const url = new URL(source);
-  const stage = url.pathname.match(/^\/(\d{4}-\d{2})\/schedule\/(r2|final)\/$/);
-  if (url.protocol !== 'https:' || url.hostname !== 'zennihon.japanbasketball.jp' ||
-      !stage || stage[1] !== season || url.search || url.hash) throw new Error('取得元・大会年度が一致しません');
-  const $ = cheerio.load(html);
-  if (!$('meta[name="description"]').attr('content')?.includes(`（${season}）`)) throw new Error('本文の大会年度を確認できません');
-  let stream = '';
-  $('script:not([src])').each((_, el) => {
-    const match = $(el).text().trim().match(/^self\.__next_f\.push\((\[[\s\S]*\])\)$/);
-    if (!match) return;
-    const chunk = JSON.parse(match[1]);
-    if (chunk[0] === 1 && typeof chunk[1] === 'string') stream += chunk[1];
-  });
-  const datasets = [];
-  const walk = value => {
-    if (!value || typeof value !== 'object') return;
-    if (Array.isArray(value.games) && value.slug === season && value.stageId === stage[2]) datasets.push(value);
-    for (const child of Object.values(value)) walk(child);
-  };
-  for (const line of stream.split('\n')) {
-    if (!/^[\da-f]+:[\[{]/.test(line)) continue;
-    let record;
-    try { record = JSON.parse(line.slice(line.indexOf(':') + 1)); } catch { continue; }
-    walk(record);
-  }
-  if (datasets.length !== 1 || !datasets[0].games.length) throw new Error('日程データを一意に取得できません');
-  const data = datasets[0], ids = new Set(), games = [];
+  const data = readCurrentCupData(html, { source, season }), ids = new Set(), games = [];
   const isBrex = side => ['宇都宮', '宇都宮ブレックス'].includes(side?.name);
   for (const row of data.games) {
     if (row.sex !== 'male' || (!isBrex(row.home) && !isBrex(row.away))) continue;
@@ -56,8 +31,8 @@ export function parseCurrentCup(html, { source, season = '2026-27' }) {
     const game = { id, sourceId: row.id, team: 'brex', d, op: opponent.name, h: null,
       venue: [row.venue.name, time].filter(Boolean).join(' '), cup: `天皇杯 ${round}`,
       provisional: row.planned === true, opponentPending: /勝者|敗者|未定|TBD/.test(opponent.name),
-      source: /^gp-\d+$/.test(row.id) ? `${url.origin}/${season}/games/${row.id}/` : source };
-    if (row.status === 'final') {
+      source: /^gp-\d+$/.test(row.id) ? `https://zennihon.japanbasketball.jp/${season}/games/${row.id}/` : source };
+    if (row.status === 'final' || row.status === 'confirmed') {
       if (![own.score, opponent.score].every(n => Number.isSafeInteger(n) && n >= 0) || own.score === opponent.score ||
           row.winner !== (row.home.score > row.away.score ? 'home' : 'away')) throw new Error('終了スコアが不正です');
       game.score = { myScore: own.score, opScore: opponent.score, result: own.score > opponent.score ? 'win' : 'lose' };

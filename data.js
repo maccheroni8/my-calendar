@@ -151,6 +151,6 @@ export const JAPAN=[
   {d:'2026-11-29',h:false,op:'カタール',venue:'カタール（アウェイ） 22:00（日本時間）',sport:'basket',competition:'FIBA W杯2027アジア予選 W5'},
   {d:'2027-02-26',h:true,op:'サウジアラビア',venue:'未定（ホーム）',sport:'basket',competition:'FIBA W杯2027アジア予選 W6'},
   {d:'2027-03-01',h:true,op:'レバノン',venue:'未定（ホーム）',sport:'basket',competition:'FIBA W杯2027アジア予選 W6'},
-  {d:'2026-11-14',h:false,op:'ブラジル',venue:'シンガポールナショナルスタジアム 19:15（日本時間）',sport:'soccer',competition:'MIZUHO BLUE CHALLENGE'},
-  {d:'2026-11-17',h:false,op:'パラグアイ',venue:'シンガポールナショナルスタジアム 22:10（日本時間）',sport:'soccer',competition:'MIZUHO BLUE CHALLENGE'},
+  {d:'2026-11-14',h:false,op:'ブラジル',flag:'bra',venue:'シンガポールナショナルスタジアム 19:15（日本時間）',sport:'soccer',competition:'MIZUHO BLUE CHALLENGE'},
+  {d:'2026-11-17',h:false,op:'パラグアイ',flag:'par',venue:'シンガポールナショナルスタジアム 22:10（日本時間）',sport:'soccer',competition:'MIZUHO BLUE CHALLENGE'},
 ];

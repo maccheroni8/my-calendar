@@ -147,8 +147,10 @@ export const JAPAN=[
   {d:'2026-09-28',h:true,op:'ベネズエラ',venue:'エディオンピースウイング広島（広島）',sport:'soccer',competition:'キリンチャレンジカップ2026'},
   {d:'2026-10-01',h:true,op:'エクアドル',venue:'横浜国際総合競技場（神奈川） 19:10',sport:'soccer',competition:'キリンカップサッカー2026'},
   {d:'2026-10-05',h:true,op:'未定',venue:'国立競技場（東京） 19:00〜19:30',sport:'soccer',competition:'キリンカップサッカー2026'},
-  {d:'2026-11-26',h:false,op:'レバノン',venue:'レバノン（アウェイ）',sport:'basket',competition:'FIBA W杯2027アジア予選 W5'},
-  {d:'2026-11-29',h:false,op:'カタール',venue:'カタール（アウェイ）',sport:'basket',competition:'FIBA W杯2027アジア予選 W5'},
+  {d:'2026-11-26',h:false,op:'レバノン',venue:'レバノン（アウェイ） 28:00（日本時間）',sport:'basket',competition:'FIBA W杯2027アジア予選 W5'},
+  {d:'2026-11-29',h:false,op:'カタール',venue:'カタール（アウェイ） 22:00（日本時間）',sport:'basket',competition:'FIBA W杯2027アジア予選 W5'},
   {d:'2027-02-26',h:true,op:'サウジアラビア',venue:'未定（ホーム）',sport:'basket',competition:'FIBA W杯2027アジア予選 W6'},
   {d:'2027-03-01',h:true,op:'レバノン',venue:'未定（ホーム）',sport:'basket',competition:'FIBA W杯2027アジア予選 W6'},
+  {d:'2026-11-14',h:false,op:'ブラジル',venue:'シンガポールナショナルスタジアム 19:15（日本時間）',sport:'soccer',competition:'MIZUHO BLUE CHALLENGE'},
+  {d:'2026-11-17',h:false,op:'パラグアイ',venue:'シンガポールナショナルスタジアム 22:10（日本時間）',sport:'soccer',competition:'MIZUHO BLUE CHALLENGE'},
 ];

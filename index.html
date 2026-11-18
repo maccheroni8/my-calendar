@@ -904,7 +904,8 @@ function getScore(ev){
   if(ev.team==='brex'&&BREX[ev.idx]?.cupId)return resolvedEvent(BREX[ev.idx],'brex',ev.idx).score||null;
   const tk=scoreTeamKey(ev);
   if(!tk)return null;
-  return scores[tk+'_'+ev.d]||null;
+  const source=tk==='japan_basket'?JAPAN[ev.idx]:null;
+  return scores[tk+'_'+ev.d]||(source?.displayDate===ev.d?scores[tk+'_'+source.d]:null)||null;
 }
 function scoreText(s){return s.result==='win'?`○${s.myScore}-${s.opScore}`:s.result==='lose'?`●${s.myScore}-${s.opScore}`:`△${s.myScore}-${s.opScore}`;}
 function scoreCls(s){return s.result==='win'?'win':s.result==='lose'?'lose':'draw';}

@@ -35,7 +35,7 @@ const TARGETS = [
     url: 'https://sports.yahoo.co.jp/basket/widget/ds/pc/men/teams/366/schedule.html',
     sport: 'basket',
     teamName: '日本',
-    dates: JAPAN.filter(e => e.sport === 'basket').map(e => e.d),
+    dates: JAPAN.filter(e => e.sport === 'basket').flatMap(e => e.displayDate ? [e.d, e.displayDate] : [e.d]),
   },
   {
     key: 'japan_soccer',

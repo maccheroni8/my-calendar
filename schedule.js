@@ -8,7 +8,7 @@ export function applyFixture(event, team, idx, fixtures = {}) {
   const valid = value => value && typeof value.op === 'string' && value.op.length > 0 &&
     /^\d{4}-\d{2}-\d{2}$/.test(value.d) && (typeof value.h === 'boolean' || (team === 'brex' && value.h === null));
   const resolved = valid(update) ? update : initial;
-  if (!valid(resolved)) return { ...event };
+  if (!valid(resolved)) return { ...event, d: event.displayDate ?? event.d };
   const result = { ...event, d: resolved.d, op: resolved.op, h: resolved.h };
   for (const name of ['venue', 'cup']) if (typeof resolved[name] === 'string') result[name] = resolved[name];
   if (typeof resolved.logo === 'string' && /^https:\/\/s\.yimg\.jp\/images\/sports\/[a-zA-Z0-9/_.-]+\.(png|svg)$/.test(resolved.logo)) result.logo = resolved.logo;

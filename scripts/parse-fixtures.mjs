@@ -27,7 +27,7 @@ export function parseFixtures(html, target) {
     const home = names[0] === target.teamName, away = names[1] === target.teamName;
     if (home === away) return;
     const op = names[home ? 1 : 0];
-    if (!op || /未定|勝者|敗者|TBD|^-$/i.test(op)) return;
+    if (!op || /未定|調整中|勝者|敗者|TBD|^-$/i.test(op)) return;
     const category = row.find('.sc-tableGame__data--category').text();
     const round = cupRound(category);
     const matches = events.map((e, idx) => ({ e, idx })).filter(({ e }) => {

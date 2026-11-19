@@ -30,6 +30,23 @@ test('Japan uses original combined-array index and country flag', () => {
   const fixtures=parseFixtures(row({date:'2026100501',category:'キリンカップ',home:'日本',away:'ニュージーランド',logo:'nationalNZL'}),{key:'japan_soccer',teamName:'日本'});
   assert.match(fixtures.japan_soccer_15.logo,/nzl\.svg$/);
 });
+test('March 2027 Japan games retain unknown opponents until confirmed fixtures arrive', () => {
+  const japanTarget = { key: 'japan_soccer', teamName: '日本' };
+  for (const date of ['2027032501', '2027033001']) {
+    const idx = JAPAN.findIndex(e => e.d === date.slice(0,4) + '-' + date.slice(4,6) + '-' + date.slice(6,8));
+    const original = JAPAN[idx];
+    assert.equal(original.op, '未定');
+    assert.deepEqual(parseFixtures(row({ date, home:'日本', away:'対戦国調整中' }), japanTarget), {});
+    assert.deepEqual(applyFixture(original, 'japan', idx), original);
+    const fixtures = parseFixtures(row({ date, home:'日本', away:'ブラジル', logo:'nationalBRA' }), japanTarget);
+    const updated = applyFixture(original, 'japan', idx, fixtures);
+    assert.equal(updated.op, 'ブラジル');
+    assert.match(updated.logo, /bra\.svg$/);
+    assert.equal(updated.venue, 'ハナサカ 18:30');
+    assert.equal(updated.d, original.d);
+    assert.equal(original.op, '未定');
+  }
+});
 test('initial confirmations survive missing updates; URL validation prevents injected logos', () => {
   assert.equal(applyFixture(CEREZO[46],'cerezo',46).d,'2026-10-07');
   assert.equal(applyFixture(CEREZO[46],'cerezo',46,{cerezo_46:{}}).op,'鹿児島');

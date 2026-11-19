@@ -157,6 +157,23 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 /* スマホ横表示：ロゴ＋略称を横並び */
 .ev-logo-abbr{display:flex;align-items:center;gap:2px;width:100%;justify-content:flex-start}
 
+@media(min-width:601px){
+  .cal-grid{grid-template-columns:repeat(7,minmax(0,1fr))}
+  .cal-grid .day-cell{height:auto;min-height:max(104px,calc((100vh - 230px) / 6));display:flex;flex-direction:column;gap:2px}
+  .cal-grid .day-num{padding-left:3px;font-size:11px}
+  .cal-events{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(68px,100%),1fr));gap:6px;flex:1;min-width:0}
+  .cal-events .event{position:relative;min-width:0;min-height:76px;padding:4px 3px;flex-direction:column;justify-content:center;gap:3px;border-radius:6px;margin:0}
+  .cal-events .ev-label{display:flex;align-items:center;justify-content:center;flex:0 1 auto;width:100%;text-align:center;white-space:normal;line-height:1.25}
+  .cal-match{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;font-size:10px;font-weight:700}
+  .cal-events .event .ev-logo{display:block;width:48px;height:48px;max-width:100%}
+  .cal-events .ev-japan .ev-logo,.cal-events .ev-japan-soccer .ev-logo{width:50px;height:46px}
+  .cal-logo-crop{display:grid;place-items:center;position:relative;width:48px;height:48px;overflow:hidden}
+  .cal-events .event .cal-logo-crop .ev-logo{position:absolute;left:var(--logo-left);top:var(--logo-top);width:var(--logo-width);height:var(--logo-height);max-width:none}
+  .cal-cup-label{font-size:9px}
+  .cal-events .badge-score{font-size:10px;line-height:1.3;padding:1px 5px;border-radius:3px}
+  .cal-events .badge{position:absolute;right:3px;bottom:3px}
+}
+
 /* ── リスト ── */
 #list-view{display:none}
 .summary-section{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
@@ -526,6 +543,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChang
 import { BREX, CEREZO, JAPAN } from './data.js';
 import { applyFixture } from './schedule.js';
 import { cupVisible } from './cup-state.js';
+import { CALENDAR_LOGO_BOUNDS } from './calendar-logo-bounds.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB0qDyXvOlXRmNhYytevAvrTLh2ZNZ5rIQ",
@@ -1094,14 +1112,23 @@ function evLabelMobileHTML(ev,landscape){
   return `<span class="ev-text-wrap">${preLabel}${icon} ${escapeHTML(abbr(ev.op))}</span>`;
 }
 
+function calOpponentLogo(name,url){
+  const image=logoImg(name,url);
+  const bounds=Object.hasOwn(CALENDAR_LOGO_BOUNDS,url)?CALENDAR_LOGO_BOUNDS[url]:null;
+  if(!bounds)return image;
+  const [width,height,x,y,artWidth,artHeight]=bounds;
+  const longEdge=Math.max(artWidth,artHeight);
+  const left=50-(x+artWidth/2)*100/longEdge;
+  const top=50-(y+artHeight/2)*100/longEdge;
+  return `<span class="cal-logo-crop" style="--logo-left:${left}%;--logo-top:${top}%;--logo-width:${width*100/longEdge}%;--logo-height:${height*100/longEdge}%">${image}</span>`;
+}
+
 function evLabelPC(ev){
-  const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.isCustom,isTbd=ev.h===null||ev.h===undefined;
-  if(isJP){const icon=ev.logo?logoImg(ev.op,ev.logo):ic(ev.sport==='soccer'?'soccer':'basket');return `${icon}${escapeHTML(ev.competition)} vs ${escapeHTML(ev.op)}`;}
-  if(isCup){return `${ev.logo?logoImg(ev.op,ev.logo):ic('trophy')}${escapeHTML(ev.cup)} vs ${escapeHTML(ev.op)}`;}
-  if(isCustom){const icon=ic(ev.sport==='basket'?'basket':'soccer');const hoa=isTbd?'':(ev.h?'H ':'A ');return `${icon}${hoa}${escapeHTML(ev.op)}`;}
-  const icon=ic(ev.team==='brex'?'basket':'soccer');
-  const hoa=isTbd?'':(ev.h?'H ':'A ');
-  return `${icon}${hoa}${escapeHTML(ev.op)}`;
+  const logo=ev.logo||(Object.hasOwn(TEAM_LOGO,ev.op)?TEAM_LOGO[ev.op]:null);
+  const sport=ev.sport||(ev.team==='brex'?'basket':'soccer');
+  const opponent=logo?calOpponentLogo(ev.op,logo):`${ic(sport,20)}<span>${escapeHTML(abbr(ev.op))}</span>`;
+  const cup=ev.cup?`<span class="cal-cup-label">${escapeHTML(cupAbbr(ev.cup))}</span>`:'';
+  return `<span class="cal-match">${opponent}${cup}</span>`;
 }
 
 function makeCell(y,m,d,other){
@@ -1117,6 +1144,13 @@ function makeCell(y,m,d,other){
     ['go','maybe','price'].forEach(v=>{if(allMv.has(v))cell.classList.add('marked-'+v);});
   }
   const num=document.createElement('div');num.className='day-num'+(dow===0?' sun':dow===6?' sat':'')+(isHoliday(ds)?' holiday':'');num.textContent=d;cell.appendChild(num);
+  const mobile=isMobile();
+  let eventContainer=cell;
+  if(!mobile&&de.length){
+    eventContainer=document.createElement('div');
+    eventContainer.className='cal-events';
+    cell.appendChild(eventContainer);
+  }
   de.forEach(ev=>{
     const tag=document.createElement('div');
     const isCup=!!ev.cup,isJP=ev.team==='japan',isCustom=ev.team==='custom'||!!ev.isCustom,isTbd=ev.h===null||ev.h===undefined;
@@ -1131,7 +1165,7 @@ function makeCell(y,m,d,other){
     if(isCup&&de.length>1)cls+=' cup-shared';
     tag.className=cls;
     const lbl=document.createElement('span');lbl.className='ev-label';
-    if(isMobile()){
+    if(mobile){
       const landscape=window.innerWidth>window.innerHeight;
       lbl.innerHTML=evLabelMobileHTML(ev,landscape);
     } else {
@@ -1142,10 +1176,10 @@ function makeCell(y,m,d,other){
     const sc=getScore(ev);
     if(sc){const sb=document.createElement('span');sb.className='badge-score bdg-'+scoreCls(sc);sb.textContent=scoreText(sc);tag.appendChild(sb);}
     // メモバッジはPCのみ表示
-    if(!isMobile()&&getMemo(ev.team,ev.storageDate||ds,ev.idx)){const m2=document.createElement('span');m2.className='badge';m2.style.cssText='background:#f0e6ff;color:#7c3aed';m2.innerHTML=ic('note',10);tag.appendChild(m2);}
+    if(!mobile&&getMemo(ev.team,ev.storageDate||ds,ev.idx)){const m2=document.createElement('span');m2.className='badge';m2.style.cssText='background:#f0e6ff;color:#7c3aed';m2.innerHTML=ic('note',10);tag.appendChild(m2);}
     const clickOp=isJP?`${ev.competition} vs ${ev.op}`:ev.op;
     tag.addEventListener('click',e=>{e.stopPropagation();openPopup(e,ev.team,ds,ev.idx,clickOp,ev.venue||'',ev.isCustom,ev.sport,ev.storageDate);});
-    cell.appendChild(tag);
+    eventContainer.appendChild(tag);
   });
   return cell;
 }

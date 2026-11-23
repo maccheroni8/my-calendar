@@ -125,6 +125,10 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 .day-num{font-size:10px;font-weight:600;color:#aaa;margin-bottom:2px}
 .day-num.sat{color:var(--brex-ink)}.day-num.sun{color:var(--cerezo-ink)}
 .day-num.holiday{color:var(--holiday-ink)}
+.day-num.has-stay{display:flex;align-items:center;justify-content:space-between;min-height:18px}
+.stay-badge{display:inline-grid;place-items:center;width:22px;height:20px;border-radius:5px;background:#e9edfa;color:#394872;flex-shrink:0}
+.day-num .stay-badge{width:19px;height:18px}
+.stay-badge .ic,.stay-toggle .ic{margin-right:0}
 .event{border-radius:3px;padding:2px 4px;font-size:9px;font-weight:600;margin-bottom:1px;line-height:1.3;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:1px}
 .ev-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
 .ev-brex{background:#002B5C;color:#fff}
@@ -207,6 +211,8 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 .lm-go{background:#22c55e;color:#fff}.lm-maybe{background:#f59e0b;color:#fff}
 .lm-price{background:#a78bfa;color:#fff}.lm-none{background:#f5f5f7;color:#aeaeb2}
 .l-score{font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;white-space:nowrap;flex-shrink:0}
+.l-stay-status{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px}
+.mrow-right.l-stay-status{justify-content:flex-end;flex-shrink:1;min-width:0}
 .ls-win{background:#0ea5e9;color:#fff}.ls-lose{background:#94a3b8;color:#fff}.ls-draw{background:#cbd5e1;color:#333}
 .l-memo{font-size:10.5px;color:#6e6e73;margin-top:4px;padding:4px 7px;background:#faf5ff;border-radius:6px;border-left:2px solid #a78bfa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
 .l-custom-tag{font-size:9px;background:#f5f5f7;color:#6e6e73;padding:1px 5px;border-radius:6px;margin-left:4px}
@@ -240,6 +246,14 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 .mark-btn.active-price{background:#af52de;color:#fff}
 .mark-btn.clear{width:100%;padding:10px;border-radius:9px;background:#fff;color:#ccc;border:1.5px solid #eee;font-size:11px;flex-direction:row;margin-bottom:8px}
 .mark-btn.clear:hover{background:#fee2e2;color:#e03;border-color:#fca5a5}
+.stay-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:44px;padding:8px 11px;border:1px solid transparent;border-radius:9px;background:#f5f5f7;color:#51515e;font:inherit;font-size:12px;font-weight:700;text-align:left;cursor:pointer}
+.stay-toggle[aria-checked="true"]{background:#e9edfa;color:#394872;border-color:#c6d1ed}
+.stay-toggle:disabled{opacity:.6;cursor:default}
+.stay-label{display:flex;align-items:center;gap:7px}
+.stay-switch{position:relative;width:32px;height:18px;border-radius:14px;background:#d1d1d8;flex-shrink:0}
+.stay-switch::before{content:'';position:absolute;width:14px;height:14px;left:2px;top:2px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0002}
+.stay-toggle[aria-checked="true"] .stay-switch{background:#495a8a}
+.stay-toggle[aria-checked="true"] .stay-switch::before{left:16px}
 .memo-sec{margin-top:10px;border-top:1px solid rgba(0,0,0,.06);padding-top:10px}
 .memo-lbl{font-size:10px;font-weight:700;color:#aeaeb2;margin-bottom:5px;display:flex;align-items:center;gap:6px}
 .memo-tag{font-size:10px;color:#22c55e;font-weight:700;opacity:0;transition:opacity .3s}
@@ -335,6 +349,9 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
   .add-modal-box{border-radius:16px 16px 0 0;width:100%;max-width:100%;position:fixed;bottom:0;max-height:92vh}
 }
 [data-theme="dark"] body{background:var(--page);color:var(--ink)}
+[data-theme="dark"] .stay-toggle{background:var(--control);color:var(--ink)}
+[data-theme="dark"] :is(.stay-badge,.stay-toggle[aria-checked="true"]){background:#303d60;color:#dbe5ff;border-color:#53668f}
+[data-theme="dark"] .stay-switch{background:#555d70}
 [data-theme="dark"] :is(.toolbar,.nav button,.day-cell,.sum-card,.month-header,.list-row,.popup,.add-modal-box){background:var(--surface)}
 [data-theme="dark"] :is(.auth-controls button,.view-toggle-btn,.layout-toggle,.sync-bar button,.chip.neutral,.day-cell.other-month,.s-none,.lm-none,.l-custom-tag,.mark-btn:not(.active-go,.active-maybe,.active-price),.popup-close,.add-cancel),
 [data-theme="dark"] .mf-btn.all:not(.active){background:var(--control);color:var(--muted)}
@@ -460,6 +477,9 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
     <div class="mark-btn" id="mb-price" onclick="setMarkAction('price')"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 3H5a2 2 0 00-2 2v7.5a2 2 0 00.6 1.4l9.5 9.5a2 2 0 002.8 0l7-7a2 2 0 000-2.8l-9.5-9.5a2 2 0 00-1.4-.6z"/><circle cx="8" cy="8.5" r="1.3" fill="currentColor" stroke="none"/></svg> 値段次第</div>
   </div>
   <div class="mark-btn clear" onclick="setMarkAction(null)">✕ マークを消す</div>
+  <button class="stay-toggle" id="stay-toggle" type="button" role="switch" aria-checked="false" onclick="toggleStay()" disabled>
+    <span class="stay-label"><span id="stay-toggle-icon" aria-hidden="true"></span>宿泊あり</span><span class="stay-switch" aria-hidden="true"></span>
+  </button>
   <div class="memo-sec">
     <div class="memo-lbl"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/><path d="M14 7l3 3"/></svg> メモ <span class="memo-tag" id="memo-tag">保存済み</span></div>
     <textarea class="memo-ta" id="memo-ta" placeholder="席、一緒に行く人、持ち物など…"></textarea>
@@ -606,6 +626,7 @@ authLogout.addEventListener('click',async()=>{
 });
 // ── アイコン（絵文字の代わりの線画SVG） ──
 const ICO_PATHS={
+  bed:'<path d="M3 19V5m18 14v-6a3 3 0 0 0-3-3h-7v6m-8 0h18M3 12h8"/><circle cx="7" cy="9" r="1.5"/>',
   basket:'<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6c2.6 3 2.6 9.8 12.8 12.8M18.4 5.6c-2.6 3-2.6 9.8-12.8 12.8"/>',
   soccer:'<circle cx="12" cy="12" r="9"/><path d="M12 7.2l3.4 2.5-1.3 4h-4.2l-1.3-4z"/><path d="M12 3v4.2M6.3 8.3L3.4 7M17.7 8.3l2.9-1.3M8.6 16.7L6 20M15.4 16.7L18 20"/>',
   check:'<circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.8 2.8L16.3 9"/>',
@@ -625,6 +646,7 @@ const ICO_PATHS={
 function ic(name,size){
   return `<svg class="ic" style="width:${size||13}px;height:${size||13}px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICO_PATHS[name]}</svg>`;
 }
+document.getElementById('stay-toggle-icon').innerHTML=ic('bed',17);
 
 // ── チームリスト ──
 const BPREMIER=[
@@ -760,6 +782,7 @@ const isMobile=()=>window.innerWidth<=600;
 // ── Firebase ──
 const OWNER_UID='J12fLmUjDagnk2cbElZRwOOCfb13'; // Firebase Consoleで確認した本人のUIDを設定。空欄では個人データに接続しない。
 let dataSession=0,unsubscribeUser=null,dataReady=false,dataBlocked=false;
+let overnightStays={};
 let serverData=null,editRevision=0,savedRevision=0,savePromise=null,queuedSnapshot=null,loggingOut=false;
 function isOwner(){return !!OWNER_UID&&authReady&&authUser?.uid===OWNER_UID&&auth.currentUser?.uid===OWNER_UID;}
 function canEdit(){return isOwner()&&dataReady&&!dataBlocked&&!loggingOut;}
@@ -774,6 +797,9 @@ function updateEditControls(){
   document.querySelectorAll('.mark-btn,.chip.add-btn,.memo-save,.memo-clr,.popup-delete,.add-submit,.memo-ta,.add-modal input,.add-modal select,.add-modal textarea,.sport-btn,.ms-btn').forEach(el=>{
     el.disabled=disabled;el.setAttribute('aria-disabled',String(disabled));
   });
+  const stayToggle=document.getElementById('stay-toggle');
+  stayToggle.disabled=disabled||!popupTarget;
+  stayToggle.setAttribute('aria-checked',String(!!popupTarget&&hasStay(popupTarget.team,popupTarget.date,popupTarget.idx)));
   document.getElementById('sync-retry').hidden=!hasUnsaved()||!dataReady||dataBlocked||!!savePromise||loggingOut;
   document.getElementById('sync-reload').hidden=!isOwner()||!!savePromise||loggingOut;
 }
@@ -784,8 +810,10 @@ function validUserData(d){
   return map(d)&&jsonValue(d)&&map(d.marks)&&map(d.memos)&&Array.isArray(d.customGames)
     &&Object.values(d.marks).every(v=>(typeof v==='string'||Array.isArray(v))&&(Array.isArray(v)?v:[v]).every(x=>['go','maybe','price'].includes(x)))
     &&Object.values(d.memos).every(v=>typeof v==='string')
+    &&(!('overnightStays' in d)||map(d.overnightStays)&&Object.values(d.overnightStays).every(v=>v===true))
     &&d.customGames.every(e=>map(e)&&typeof e.d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(e.d)&&typeof e.op==='string'&&['basket','soccer'].includes(e.sport)
-      &&['venue','cup','competition'].every(k=>!(k in e)||typeof e[k]==='string')&&(!('h' in e)||e.h===null||typeof e.h==='boolean')&&(!('isCustom' in e)||typeof e.isCustom==='boolean'))
+      &&['venue','cup','competition'].every(k=>!(k in e)||typeof e[k]==='string')&&(!('h' in e)||e.h===null||typeof e.h==='boolean')&&(!('isCustom' in e)||typeof e.isCustom==='boolean')
+      &&(!('overnightStay' in e)||typeof e.overnightStay==='boolean'))
     &&(!('updatedAt' in d)||typeof d.updatedAt==='string');
 }
 function sameData(a,b){
@@ -794,7 +822,7 @@ function sameData(a,b){
   const keys=Object.keys(a);return keys.length===Object.keys(b).length&&keys.every(k=>Object.hasOwn(b,k)&&sameData(a[k],b[k]));
 }
 function clearPersonalData(){
-  marks={};memos={};customGames=[];serverData=null;editRevision=savedRevision=0;addMarkVal=[];
+  marks={};memos={};overnightStays={};customGames=[];serverData=null;editRevision=savedRevision=0;addMarkVal=[];
   window.closePopup();window.closeAddModal();
   ['memo-ta','add-opponent','add-opponent2','add-date','add-time','add-memo'].forEach(id=>document.getElementById(id).value='');
   ['popup-team','popup-info'].forEach(id=>document.getElementById(id).textContent='');
@@ -824,7 +852,8 @@ function receiveUserData(snap,session){
   }
   serverData=structuredClone(d);dataReady=true;
   if(!hasUnsaved()){
-    marks=structuredClone(d.marks);memos=structuredClone(d.memos);customGames=structuredClone(d.customGames);renderCurrent();
+    if(popupTarget?.isCustom&&!sameData(customGames[popupTarget.idx],d.customGames[popupTarget.idx]))window.closePopup();
+    marks=structuredClone(d.marks);memos=structuredClone(d.memos);overnightStays=structuredClone(d.overnightStays||{});customGames=structuredClone(d.customGames);renderCurrent();
   }
   setSyncStatus(hasUnsaved()?'未保存の変更があります。「保存を再試行」を押してください':'保存済み',hasUnsaved()?'err':'ok');
 }
@@ -850,6 +879,7 @@ async function saveToFirebase(){
   if(!hasUnsaved())return true;
   const session=dataSession,revision=editRevision,base=structuredClone(serverData);
   const payload={...base,marks:structuredClone(marks),memos:structuredClone(memos),customGames:structuredClone(customGames),updatedAt:new Date().toISOString()};
+  if(Object.hasOwn(base,'overnightStays')||Object.keys(overnightStays).length)payload.overnightStays=structuredClone(overnightStays);
   if(!validUserData(payload)){blockData('保存内容の形式を確認できません（未保存）');return false;}
   setSyncStatus('保存中…','loading');
   const task=(async()=>{
@@ -903,6 +933,8 @@ window.addEventListener('beforeunload',event=>{
 function mk(t,d,i){return t+'_'+d+'_'+i;}
 function getMark(t,d,i){const v=marks[mk(t,d,i)];if(!v)return[];return (Array.isArray(v)?v:[v]).filter(x=>['go','maybe','price'].includes(x));}
 function getMemo(t,d,i){return memos[mk(t,d,i)]||'';}
+function hasStay(t,d,i){return t==='custom'?customGames[i]?.overnightStay===true:overnightStays[mk(t,d,i)]===true;}
+function stayBadge(size){return `<span class="stay-badge" title="宿泊あり" role="img" aria-label="宿泊あり">${ic('bed',size)}</span>`;}
 // ── 日本の祝日（2026年8月〜2027年6月） ──
 const HOLIDAYS=new Set([
   '2026-08-11','2026-09-21','2026-09-22','2026-09-23','2026-10-12','2026-11-03','2026-11-23',
@@ -1144,6 +1176,10 @@ function makeCell(y,m,d,other){
     ['go','maybe','price'].forEach(v=>{if(allMv.has(v))cell.classList.add('marked-'+v);});
   }
   const num=document.createElement('div');num.className='day-num'+(dow===0?' sun':dow===6?' sat':'')+(isHoliday(ds)?' holiday':'');num.textContent=d;cell.appendChild(num);
+  if(de.some(ev=>hasStay(ev.team,ev.storageDate||ev.d,ev.idx))){
+    num.classList.add('has-stay');
+    num.insertAdjacentHTML('beforeend',stayBadge(13));
+  }
   const mobile=isMobile();
   let eventContainer=cell;
   if(!mobile&&de.length){
@@ -1244,18 +1280,21 @@ function renderList(){
       const markHtml=ev.mv.length?ev.mv.map(v=>`<span class="l-mark lm-${v}">${v==='go'?ic('check',11)+' 行く':v==='maybe'?ic('maybe',11)+' できたら':ic('price',11)+' 値段次第'}</span>`).join(''):`<span class="l-mark lm-none">未定</span>`;
       const sc=getScore(ev);
       const scoreHtml=sc?`<span class="l-score ls-${scoreCls(sc)}">${escapeHTML(scoreText(sc))}</span>`:'';
+      const stay=hasStay(ev.team,ev.storageDate||ev.d,ev.idx);
+      const statusHtml=scoreHtml+(stay?stayBadge(14):'')+markHtml;
+      const listStatus=stay?`<span class="l-stay-status">${statusHtml}</span>`:statusHtml;
       const memo=getMemo(ev.team,ev.storageDate||ev.d,ev.idx);
       const memoHtml=memo?`<div class="l-memo">${ic('note',11)} ${escapeHTML(memo.slice(0,60))}${memo.length>60?'…':''}</div>`:'';
       const row=document.createElement('div');row.className='list-row';
       const clickOp=isJP?`${ev.competition} vs ${ev.op}`:ev.op;
       const venueStr=ev.venue||'';
       if(layout==='hori'){
-        row.innerHTML=`<span class="l-date" style="color:${wC};display:block;margin-bottom:4px">${escapeHTML(dateStr)}</span><div style="margin-bottom:4px"><span class="${badgeCl}">${badgeTx}</span></div><div style="font-size:12px;font-weight:500;margin-bottom:2px">${ev.logo?logoImg(ev.op,ev.logo)+' ':''}${escapeHTML(opTx)}</div><div style="font-size:10px;color:#bbb;margin-bottom:4px">${escapeHTML(venueStr)}</div>${scoreHtml}${markHtml}${memoHtml}`;
+        row.innerHTML=`<span class="l-date" style="color:${wC};display:block;margin-bottom:4px">${escapeHTML(dateStr)}</span><div style="margin-bottom:4px"><span class="${badgeCl}">${badgeTx}</span></div><div style="font-size:12px;font-weight:500;margin-bottom:2px">${ev.logo?logoImg(ev.op,ev.logo)+' ':''}${escapeHTML(opTx)}</div><div style="font-size:10px;color:#bbb;margin-bottom:4px">${escapeHTML(venueStr)}</div>${listStatus}${memoHtml}`;
       } else if(isMobile()){
         row.classList.add('mob-card');
-        row.innerHTML=`<div class="mrow-top"><div class="mrow-left"><span class="l-date" style="color:${wC}">${escapeHTML(dateStr)}</span><span class="${badgeCl}">${badgeTx}</span></div><div class="mrow-right">${scoreHtml}${markHtml}</div></div><div class="l-op">${ev.logo?logoImg(ev.op,ev.logo)+' ':''}${escapeHTML(opTx)}</div><div class="l-venue">${escapeHTML(venueStr)}</div>${memoHtml}`;
+        row.innerHTML=`<div class="mrow-top"><div class="mrow-left"><span class="l-date" style="color:${wC}">${escapeHTML(dateStr)}</span><span class="${badgeCl}">${badgeTx}</span></div><div class="mrow-right${stay?' l-stay-status':''}">${statusHtml}</div></div><div class="l-op">${ev.logo?logoImg(ev.op,ev.logo)+' ':''}${escapeHTML(opTx)}</div><div class="l-venue">${escapeHTML(venueStr)}</div>${memoHtml}`;
       } else {
-        row.innerHTML=`<div class="l-date" style="color:${wC}">${escapeHTML(dateStr)}</div><span class="${badgeCl}">${badgeTx}</span><div class="l-op">${ev.logo?logoImg(ev.op,ev.logo)+' ':''}${escapeHTML(opTx)}</div><div class="l-venue">${escapeHTML(venueStr)}</div>${scoreHtml}${markHtml}${memoHtml}`;
+        row.innerHTML=`<div class="l-date" style="color:${wC}">${escapeHTML(dateStr)}</div><span class="${badgeCl}">${badgeTx}</span><div class="l-op">${ev.logo?logoImg(ev.op,ev.logo)+' ':''}${escapeHTML(opTx)}</div><div class="l-venue">${escapeHTML(venueStr)}</div>${listStatus}${memoHtml}`;
       }
       row.addEventListener('click',e=>openPopup(e,ev.team,ev.d,ev.idx,clickOp,venueStr,ev.isCustom,ev.sport,ev.storageDate));
       rows.appendChild(row);
@@ -1266,8 +1305,8 @@ function renderList(){
 
 // ── ポップアップ ──
 function openPopup(e,team,date,idx,op,info,isCustom,sport,storageDate=date){
-  updateEditControls();
   popupTarget={team,date:storageDate,idx,isCustom};
+  updateEditControls();
   const popup=document.getElementById('popup');
   const tEl=document.getElementById('popup-team');
   // 結果（自動取得・試合終了分のみ）：確定していれば「vs」の代わりにスコアを表示
@@ -1328,6 +1367,20 @@ window.setMarkAction=function(v){
   cur=cur.includes(v)?cur.filter(x=>x!==v):[...cur,v];
   if(cur.length)marks[key]=cur;else delete marks[key];
   ['go','maybe','price'].forEach(x=>document.getElementById('mb-'+x).className='mark-btn'+(cur.includes(x)?' active-'+x:''));
+  debouncedSave();renderCurrent();
+};
+window.toggleStay=function(){
+  if(!canEdit()||!popupTarget)return;
+  const {team,date,idx}=popupTarget;
+  const active=hasStay(team,date,idx);
+  if(team==='custom'){
+    const game=customGames[idx];
+    if(!game||game.d!==date)return;
+    if(active)delete game.overnightStay;else game.overnightStay=true;
+  }else{
+    const key=mk(team,date,idx);
+    if(active)delete overnightStays[key];else overnightStays[key]=true;
+  }
   debouncedSave();renderCurrent();
 };
 window.saveMemo=function(){

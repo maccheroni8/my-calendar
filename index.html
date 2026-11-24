@@ -155,7 +155,7 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 /* スマホカレンダー内ロゴ */
 .ev-label{min-width:0;overflow-wrap:anywhere}
 .ev-logo{width:20px;height:20px;object-fit:contain;vertical-align:middle;flex-shrink:0}
-.velca-outline :is(.cal-logo-crop,.ev-logo:not(.cal-logo-crop *)){filter:url(#velca-logo-outline)}
+.event.logo-outlined :is(.cal-logo-crop,.ev-logo:not(.cal-logo-crop *)){filter:url(#opponent-logo-outline)}
 .event.cup-shared .ev-logo{width:18px;height:18px}
 .ev-abbr{font-size:9px;font-weight:700;vertical-align:middle}
 .ev-vs{font-size:8px;opacity:.8}
@@ -379,7 +379,7 @@ svg.ic{width:13px;height:13px;vertical-align:-2px;flex-shrink:0;margin-right:2px
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
-    <filter id="velca-logo-outline" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
+    <filter id="opponent-logo-outline" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">
       <feMorphology in="SourceAlpha" operator="dilate" radius="0.8" result="expanded"/>
       <feFlood flood-color="#e3eafb" result="color"/>
       <feComposite in="color" in2="expanded" operator="in" result="outline"/>
@@ -1211,7 +1211,7 @@ function makeCell(y,m,d,other){
     else if(isCup) cls+='ev-cup';
     else cls+=`ev-${ev.team}`+(isTbd?'':(ev.h?'':' away'));
     if(isCup&&de.length>1)cls+=' cup-shared';
-    if(!isCup&&ev.team==='brex'&&ev.h===true&&ev.op==='長崎ヴェルカ')cls+=' velca-outline';
+    if(!isCup&&ev.team==='brex'&&ev.h===true&&(ev.op==='長崎ヴェルカ'||ev.op==='アルティーリ千葉'))cls+=' logo-outlined';
     tag.className=cls;
     const lbl=document.createElement('span');lbl.className='ev-label';
     if(mobile){
